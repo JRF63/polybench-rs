@@ -13,6 +13,7 @@ pub trait AllocUninit: Sized {
     }
 }
 
+impl<const N: usize> AllocUninit for Array1D<N> {}
 impl<const M: usize, const N: usize> AllocUninit for Array2D<M, N> {}
 
 #[cfg(test)]

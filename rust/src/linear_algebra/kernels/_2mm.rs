@@ -1,8 +1,13 @@
 use crate::ndarray::AllocUninit;
 use crate::ndarray::Array2D;
 use crate::util;
-use crate::{NI, NJ, NK, NL, NUM_SAMPLES};
+use crate::NUM_SAMPLES;
 use std::time::{Duration, Instant};
+
+const NI: usize = 1024;
+const NJ: usize = 1024;
+const NK: usize = 1024;
+const NL: usize = 1024;
 
 unsafe fn init_array(
     ni: usize,

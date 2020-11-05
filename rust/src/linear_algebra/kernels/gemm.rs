@@ -1,8 +1,12 @@
 use crate::ndarray::Array2D;
 use crate::ndarray::AllocUninit;
-use crate::{NI, NJ, NK, NUM_SAMPLES};
+use crate::NUM_SAMPLES;
 use crate::util;
 use std::time::{Instant, Duration};
+
+const NI: usize = 1024;
+const NJ: usize = 1024;
+const NK: usize = 1024;
 
 unsafe fn init_array(
     ni: usize,
@@ -55,26 +59,6 @@ unsafe fn kernel_gemm(
     }
 }
 
-unsafe fn kernel_gemm2(
-    ni: usize,
-    nj: usize,
-    nk: usize,
-    alpha: f64,
-    beta: f64,
-    c: &mut Array2D<NI, NJ>,
-    a: &Array2D<NI, NK>,
-    b: &Array2D<NK, NJ>,
-) {
-    for i in 0..ni {
-        for j in 0..nj {
-            c.0[i].0[j] *= beta;
-            for k in 0..nk {
-                c.0[i].0[j] += alpha * a.0[i].0[k] * b.0[k].0[j];
-            }
-        }
-    }
-}
-
 pub fn bench() -> Duration {
     let ni = NI;
     let nj = NJ;
@@ -82,9 +66,9 @@ pub fn bench() -> Duration {
 
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut c: Box<Array2D<NI, NJ>> = Array2D::uninit();
-    let mut a: Box<Array2D<NI, NK>> = Array2D::uninit();
-    let mut b: Box<Array2D<NK, NJ>> = Array2D::uninit();
+    let mut c = Array2D::uninit();
+    let mut a = Array2D::uninit();
+    let mut b = Array2D::uninit();
 
     let mut min_dur = util::max_duration();
     for _ in 0..NUM_SAMPLES {
@@ -96,7 +80,7 @@ pub fn bench() -> Duration {
             util::flush_llc_cache();
 
             let now = Instant::now();
-            kernel_gemm2(ni, nj, nk, alpha, beta, &mut c, &a, &b);
+            kernel_gemm(ni, nj, nk, alpha, beta, &mut c, &a, &b);
             let elapsed = now.elapsed();
 
             util::black_box(&c);
