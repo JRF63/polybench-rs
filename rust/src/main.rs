@@ -16,9 +16,7 @@ macro_rules! bench {
 }
 
 fn main() {
-    const NUM_RUNS: usize = 1;
-    
-    let benches: [(&str, fn(usize) -> Duration); 9]  = [
+    let benches: [(&str, fn(usize) -> Duration); 15]  = [
         bench!(datamining::correlation::bench),
         bench!(datamining::covariance::bench),
         bench!(linear_algebra::blas::gemm::bench),
@@ -28,10 +26,16 @@ fn main() {
         bench!(linear_algebra::blas::syr2k::bench),
         bench!(linear_algebra::blas::syrk::bench),
         bench!(linear_algebra::blas::trmm::bench),
+        bench!(linear_algebra::kernels::_2mm::bench),
+        bench!(linear_algebra::kernels::_3mm::bench),
+        bench!(linear_algebra::kernels::atax::bench),
+        bench!(linear_algebra::kernels::bicg::bench),
+        bench!(linear_algebra::kernels::doitgen::bench),
+        bench!(linear_algebra::kernels::mvt::bench),
     ];
 
     let (s, f) = benches.last().unwrap();
-    println!("{}: {:?}", s, f(NUM_RUNS));
+    println!("{}: {:?}", s, f(1));
 
     // let elapsed = linear_algebra::blas::gemm::bench();
     // println!("linear_algebra::blas::gemm: {:?}", elapsed);
