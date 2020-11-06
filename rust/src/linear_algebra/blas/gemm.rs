@@ -1,12 +1,11 @@
-use crate::ndarray::Array2D;
 use crate::ndarray::AllocUninit;
-use crate::NUM_SAMPLES;
+use crate::ndarray::Array2D;
 use crate::util;
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
-const NI: usize = 1024;
-const NJ: usize = 1024;
-const NK: usize = 1024;
+const NI: usize = 1000;
+const NJ: usize = 1100;
+const NK: usize = 1200;
 
 unsafe fn init_array(
     ni: usize,
@@ -18,21 +17,21 @@ unsafe fn init_array(
     a: &mut Array2D<NI, NK>,
     b: &mut Array2D<NK, NJ>,
 ) {
-    *alpha = 32412.0;
-    *beta = 2123.0;
+    *alpha = 1.5;
+    *beta = 1.2;
     for i in 0..ni {
         for j in 0..nj {
-            *c.0.get_unchecked_mut(i).0.get_unchecked_mut(j) = (i * j) as f64 / ni as f64;
+            c[(i, j)] = ((i * j + 1) % ni) as f64 / ni as f64;
         }
     }
     for i in 0..ni {
         for j in 0..nk {
-            *a.0.get_unchecked_mut(i).0.get_unchecked_mut(j) = (i * j) as f64 / ni as f64;
+            a[(i, j)] = (i * (j + 1) % nk) as f64 / nk as f64;
         }
     }
     for i in 0..nk {
         for j in 0..nj {
-            *b.0.get_unchecked_mut(i).0.get_unchecked_mut(j) = (i * j) as f64 / ni as f64;
+            b[(i, j)] = (i * (j + 2) % nj) as f64 / nj as f64;
         }
     }
 }
@@ -49,17 +48,15 @@ unsafe fn kernel_gemm(
 ) {
     for i in 0..ni {
         for j in 0..nj {
-            *c.0.get_unchecked_mut(i).0.get_unchecked_mut(j) *= beta;
+            c[(i, j)] *= beta;
             for k in 0..nk {
-                *c.0.get_unchecked_mut(i).0.get_unchecked_mut(j) += alpha
-                    * (*a.0.get_unchecked(i).0.get_unchecked(k))
-                    * (*b.0.get_unchecked(k).0.get_unchecked(j));
+                c[(i, j)] += alpha * a[(i, k)] * b[(k, j)];
             }
         }
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench(num_runs: usize) -> Duration {
     let ni = NI;
     let nj = NJ;
     let nk = NK;
@@ -71,11 +68,9 @@ pub fn bench() -> Duration {
     let mut b = Array2D::uninit();
 
     let mut min_dur = util::max_duration();
-    for _ in 0..NUM_SAMPLES {
+    for _ in 0..num_runs {
         unsafe {
-            init_array(
-                ni, nj, nk, &mut alpha, &mut beta, &mut c, &mut a, &mut b,
-            );
+            init_array(ni, nj, nk, &mut alpha, &mut beta, &mut c, &mut a, &mut b);
 
             util::flush_llc_cache();
 

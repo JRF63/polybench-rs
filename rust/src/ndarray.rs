@@ -1,7 +1,56 @@
-pub struct Array1D<const N: usize>(pub [f64; N]);
+use std::ops::{Index, IndexMut};
 
+pub struct Array1D<const M: usize>(pub [f64; M]);
+
+impl<const M: usize> Index<usize> for Array1D<M> {
+    type Output = f64;
+
+    #[inline(always)]
+    fn index(&self, index: usize) -> &Self::Output {
+        debug_assert!(index < M);
+        unsafe {
+            self.0.get_unchecked(index)
+        }
+    }
+}
+
+impl<const M: usize> IndexMut<usize> for Array1D<M> {
+    #[inline(always)]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        debug_assert!(index < M);
+        unsafe {
+            self.0.get_unchecked_mut(index)
+        }
+    }
+}
+
+// `pub [[f64; N]; M]` causes a stack overflow when accessed
 #[repr(C, align(32))]
 pub struct Array2D<const M: usize, const N: usize>(pub [Array1D<N>; M]);
+
+impl<const M: usize, const N: usize> Index<(usize, usize)> for Array2D<M, N> {
+    type Output = f64;
+
+    #[inline(always)]
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        debug_assert!(index.0 < M);
+        debug_assert!(index.1 < N);
+        unsafe {
+            self.0.get_unchecked(index.0).0.get_unchecked(index.1)
+        }
+    }
+}
+
+impl<const M: usize, const N: usize> IndexMut<(usize, usize)> for Array2D<M, N> {
+    #[inline(always)]
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+        debug_assert!(index.0 < M);
+        debug_assert!(index.1 < N);
+        unsafe {
+            self.0.get_unchecked_mut(index.0).0.get_unchecked_mut(index.1)
+        }
+    }
+}
 
 pub trait AllocUninit: Sized {
     fn uninit() -> Box<Self> {

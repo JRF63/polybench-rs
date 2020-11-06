@@ -10,22 +10,19 @@ unsafe fn init_array(m: usize, n: usize, float_n: &mut f64, data: &mut Array2D<N
     *float_n = n as f64;
     for i in 0..n {
         for j in 0..m {
-            data[(i, j)] = (i * j) as f64 / (M + i) as f64;
+            data[(i, j)] = (i*j) as f64 / M as f64;
         }
     }
 }
 
-unsafe fn kernel_correlation(
+unsafe fn kernel_covariance(
     m: usize,
     n: usize,
     float_n: f64,
     data: &mut Array2D<N, M>,
-    corr: &mut Array2D<M, M>,
+    cov: &mut Array2D<M, M>,
     mean: &mut Array1D<M>,
-    stddev: &mut Array1D<M>,
 ) {
-    let eps = 0.1;
-
     for j in 0..m {
         mean[j] = 0.0;
         for i in 0..n {
@@ -34,34 +31,22 @@ unsafe fn kernel_correlation(
         mean[j] /= float_n;
     }
 
-    for j in 0..m {
-        stddev[j] = 0.0;
-        for i in 0..n {
-            stddev[j] += (data[(i, j)] - mean[j]) * (data[(i, j)] - mean[j]);
-            stddev[j] /= float_n;
-            stddev[j] = stddev[j].sqrt();
-            stddev[j] = if stddev[j] <= eps { 1.0 } else { stddev[j] };
-        }
-    }
-
     for i in 0..n {
         for j in 0..m {
             data[(i, j)] -= mean[j];
-            data[(i, j)] /= float_n.sqrt() * stddev[j];
         }
     }
 
-    for i in 0..(m - 1) {
-        corr[(i, i)] = 1.0;
-        for j in (i + 1)..m {
-            corr[(i, j)] = 0.0;
+    for i in 0..m {
+        for j in i..m {
+            cov[(i, j)] = 0.0;
             for k in 0..n {
-                corr[(i, j)] += data[(k, i)] * data[(k, j)];
+                cov[(i, j)] += data[(k, i)] * data[(k, j)];
             }
-            corr[(j, i)] = corr[(i, j)];
+            cov[(i, j)] /= float_n - 1.0;
+            cov[(j, i)] = cov[(i, j)];
         }
     }
-    corr[(m - 1, m - 1)] = 1.0;
 }
 
 pub fn bench(num_runs: usize) -> Duration {
@@ -70,9 +55,8 @@ pub fn bench(num_runs: usize) -> Duration {
 
     let mut float_n = 0.0;
     let mut data = Array2D::uninit();
-    let mut corr = Array2D::uninit();
+    let mut cov = Array2D::uninit();
     let mut mean = Array1D::uninit();
-    let mut stddev = Array1D::uninit();
 
     let mut min_dur = util::max_duration();
     for _ in 0..num_runs {
@@ -82,10 +66,10 @@ pub fn bench(num_runs: usize) -> Duration {
             util::flush_llc_cache();
 
             let now = Instant::now();
-            kernel_correlation(m, n, float_n, &mut data, &mut corr, &mut mean, &mut stddev);
+            kernel_covariance(m, n, float_n, &mut data, &mut cov, &mut mean);
             let elapsed = now.elapsed();
 
-            util::black_box(&corr);
+            util::black_box(&cov);
 
             if elapsed < min_dur {
                 min_dur = elapsed;

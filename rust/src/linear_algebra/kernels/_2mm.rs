@@ -1,7 +1,6 @@
 use crate::ndarray::AllocUninit;
 use crate::ndarray::Array2D;
 use crate::util;
-use crate::NUM_SAMPLES;
 use std::time::{Duration, Instant};
 
 const NI: usize = 1024;
@@ -80,7 +79,7 @@ unsafe fn kernel_2mm(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench(num_runs: usize) -> Duration {
     let ni = NI;
     let nj = NJ;
     let nk = NK;
@@ -95,7 +94,7 @@ pub fn bench() -> Duration {
     let mut d = Array2D::uninit();
 
     let mut min_dur = util::max_duration();
-    for _ in 0..NUM_SAMPLES {
+    for _ in 0..num_runs {
         unsafe {
             init_array(
                 ni, nj, nk, nl, &mut alpha, &mut beta, &mut a, &mut b, &mut c, &mut d,

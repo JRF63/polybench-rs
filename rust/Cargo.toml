@@ -1,9 +1,8 @@
 [package]
-name = "polly-bench"
+name = "polybench-rs"
 version = "0.1.0"
 authors = ["Joseph Rafael Ferrer <rafael2x0@gmail.com>"]
 edition = "2018"
-license = "MIT"
+license = "GPLv2"
 
 [dependencies]
-bencher = "0.1"
