@@ -18,15 +18,19 @@ macro_rules! bench {
 fn main() {
     const NUM_RUNS: usize = 1;
     
-    let benches: [(&str, fn(usize) -> Duration); 5]  = [
+    let benches: [(&str, fn(usize) -> Duration); 9]  = [
         bench!(datamining::correlation::bench),
         bench!(datamining::covariance::bench),
         bench!(linear_algebra::blas::gemm::bench),
         bench!(linear_algebra::blas::gemver::bench),
         bench!(linear_algebra::blas::gesummv::bench),
+        bench!(linear_algebra::blas::symm::bench),
+        bench!(linear_algebra::blas::syr2k::bench),
+        bench!(linear_algebra::blas::syrk::bench),
+        bench!(linear_algebra::blas::trmm::bench),
     ];
 
-    let (s, f) = benches[4];
+    let (s, f) = benches.last().unwrap();
     println!("{}: {:?}", s, f(NUM_RUNS));
 
     // let elapsed = linear_algebra::blas::gemm::bench();
