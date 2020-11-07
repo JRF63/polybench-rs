@@ -16,7 +16,7 @@ macro_rules! bench {
 }
 
 fn main() {
-    let benches: [(&str, fn(usize) -> Duration); 15]  = [
+    let benches: [(&str, fn(usize) -> Duration); 21]  = [
         bench!(datamining::correlation::bench),
         bench!(datamining::covariance::bench),
         bench!(linear_algebra::blas::gemm::bench),
@@ -32,14 +32,14 @@ fn main() {
         bench!(linear_algebra::kernels::bicg::bench),
         bench!(linear_algebra::kernels::doitgen::bench),
         bench!(linear_algebra::kernels::mvt::bench),
+        bench!(linear_algebra::solvers::cholesky::bench),
+        bench!(linear_algebra::solvers::durbin::bench),
+        bench!(linear_algebra::solvers::gramschmidt::bench),
+        bench!(linear_algebra::solvers::lu::bench),
+        bench!(linear_algebra::solvers::ludcmp::bench),
+        bench!(linear_algebra::solvers::trisolv::bench),
     ];
 
     let (s, f) = benches.last().unwrap();
     println!("{}: {:?}", s, f(1));
-
-    // let elapsed = linear_algebra::blas::gemm::bench();
-    // println!("linear_algebra::blas::gemm: {:?}", elapsed);
-
-    // let elapsed = medley::floyd_warshall::bench();
-    // println!("medley::floyd_warshall: {:?}", elapsed);
 }
