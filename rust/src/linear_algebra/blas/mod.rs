@@ -1,4 +1,5 @@
 pub mod gemm;
+pub mod gemm2;
 pub mod gemver;
 pub mod gesummv;
 pub mod symm;

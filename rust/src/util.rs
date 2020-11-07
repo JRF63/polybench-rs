@@ -1,6 +1,6 @@
 use crate::ndarray::AllocUninit;
 use crate::ndarray::Array2D;
-use std::time::Duration;
+use std::time::{Instant, Duration};
 
 // Lifted from bencher crate:
 // https://docs.rs/bencher/0.1.5/src/bencher/lib.rs.html#590-596
@@ -24,6 +24,14 @@ pub fn flush_llc_cache() {
 
 pub fn max_duration() -> Duration {
     Duration::new(u64::MAX, 1000000000 - 1)
+}
+
+#[inline(always)]
+pub fn time_function<F: FnOnce()>(f: F) -> Duration {
+    flush_llc_cache();
+    let now = Instant::now();
+    f();
+    now.elapsed()
 }
 
 pub fn into_positive_semi_definite<const N: usize>(a: &mut Array2D<N, N>) {
