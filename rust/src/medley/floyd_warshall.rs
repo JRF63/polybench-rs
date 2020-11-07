@@ -3,13 +3,15 @@ use crate::ndarray::Array2D;
 use crate::util;
 use std::time::{Duration, Instant};
 
-const N: usize = 1024;
+const N: usize = 2800;
 
 unsafe fn init_array(n: usize, path: &mut Array2D<N, N>) {
     for i in 0..n {
         for j in 0..n {
-            *path.0.get_unchecked_mut(i).0.get_unchecked_mut(j) =
-                ((i + 1) * (j + 1)) as f64 / n as f64;
+            path[(i, j)] = (i * j % 7 + 1) as f64;
+            if (i + j) % 13 == 0 || (i + j) % 7 == 0 || (i + j) % 11 == 0 {
+                path[(i, j)] = 999 as f64;
+            }
         }
     }
 }
@@ -18,16 +20,11 @@ unsafe fn kernel_floyd_warshall(n: usize, path: &mut Array2D<N, N>) {
     for k in 0..n {
         for i in 0..n {
             for j in 0..n {
-                *path.0.get_unchecked_mut(i).0.get_unchecked_mut(j) =
-                    if *path.0.get_unchecked(i).0.get_unchecked(j)
-                        < *path.0.get_unchecked(i).0.get_unchecked(k)
-                            + *path.0.get_unchecked(k).0.get_unchecked(j)
-                    {
-                        *path.0.get_unchecked(i).0.get_unchecked(j)
-                    } else {
-                        *path.0.get_unchecked(i).0.get_unchecked(k)
-                            + *path.0.get_unchecked(k).0.get_unchecked(j)
-                    };
+                path[(i, j)] = if path[(i, j)] < path[(i, k)] + path[(k, j)] {
+                    path[(i, j)]
+                } else {
+                    path[(i, k)] + path[(k, j)]
+                };
             }
         }
     }
