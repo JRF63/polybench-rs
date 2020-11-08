@@ -37,3 +37,37 @@ pub mod medley {
         pub const N: usize = 2500;
     }
 }
+
+pub mod stencils {
+    pub mod adi {
+        pub type DataType = f64;
+        pub const N: usize = 1000;
+        pub const TSTEPS: usize = 500;
+    }
+    pub mod fdtd_2d {
+        pub type DataType = f64;
+        pub const NX: usize = 1000;
+        pub const NY: usize = 1200;
+        pub const TMAX: usize = 500;
+    }
+    pub mod heat_3d {
+        pub type DataType = f64;
+        pub const N: usize = 120;
+        pub const TSTEPS: usize = 500;
+    }
+    pub mod jacobi_1d {
+        pub type DataType = f64;
+        pub const N: usize = 2000;
+        pub const TSTEPS: usize = 500;
+    }
+    pub mod jacobi_2d {
+        pub type DataType = f64;
+        pub const N: usize = 1300;
+        pub const TSTEPS: usize = 500;
+    }
+    pub mod seidel_2d {
+        pub type DataType = f64;
+        pub const N: usize = 2000;
+        pub const TSTEPS: usize = 500;
+    }
+}

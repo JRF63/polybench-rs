@@ -7,7 +7,7 @@ pub struct Array1D<T, const M: usize>(pub [T; M]);
 pub struct Array2D<T, const M: usize, const N: usize>(pub [Array1D<T, N>; M]);
 
 #[repr(C, align(32))]
-pub struct Array3D<T, const P: usize, const Q: usize, const R: usize>(pub [Array2D<T, Q, R>; P]);
+pub struct Array3D<T, const M: usize, const N: usize, const P: usize>(pub [Array2D<T, N, P>; M]);
 
 impl<T, const M: usize> Index<usize> for Array1D<T, M> {
     type Output = T;
@@ -45,20 +45,20 @@ impl<T, const M: usize, const N: usize> IndexMut<usize> for Array2D<T, M, N> {
     }
 }
 
-impl<T, const P: usize, const Q: usize, const R: usize> Index<usize> for Array3D<T, P, Q, R> {
-    type Output = Array2D<T, Q, R>;
+impl<T, const M: usize, const N: usize, const P: usize> Index<usize> for Array3D<T, M, N, P> {
+    type Output = Array2D<T, N, P>;
 
     #[inline(always)]
     fn index(&self, index: usize) -> &Self::Output {
-        debug_assert!(index < P);
+        debug_assert!(index < M);
         unsafe { self.0.get_unchecked(index) }
     }
 }
 
-impl<T, const P: usize, const Q: usize, const R: usize> IndexMut<usize> for Array3D<T, P, Q, R> {
+impl<T, const M: usize, const N: usize, const P: usize> IndexMut<usize> for Array3D<T, M, N, P> {
     #[inline(always)]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        debug_assert!(index < P);
+        debug_assert!(index < M);
         unsafe { self.0.get_unchecked_mut(index) }
     }
 }
@@ -83,7 +83,7 @@ pub trait ArrayAlloc: Sized {
 
 impl<T, const N: usize> ArrayAlloc for Array1D<T, N> {}
 impl<T, const M: usize, const N: usize> ArrayAlloc for Array2D<T, M, N> {}
-impl<T, const P: usize, const Q: usize, const R: usize> ArrayAlloc for Array3D<T, P, Q, R> {}
+impl<T, const M: usize, const N: usize, const P: usize> ArrayAlloc for Array3D<T, M, N, P> {}
 
 impl<T, const N: usize> Array2D<T, N, N>
 where

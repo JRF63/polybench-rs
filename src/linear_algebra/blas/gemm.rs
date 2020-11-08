@@ -72,6 +72,6 @@ pub fn bench() -> Duration {
 }
 
 #[test]
-fn test_gemm() {
+fn check() {
     bench();
 }
