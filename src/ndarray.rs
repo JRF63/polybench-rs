@@ -1,10 +1,16 @@
-use std::ops::{Index, IndexMut};
+use std::ops::{self, Index, IndexMut};
 
 #[repr(C, align(32))]
-pub struct Array1D<const M: usize>(pub [f64; M]);
+pub struct Array1D<T, const M: usize>(pub [T; M]);
 
-impl<const M: usize> Index<usize> for Array1D<M> {
-    type Output = f64;
+#[repr(C, align(32))]
+pub struct Array2D<T, const M: usize, const N: usize>(pub [Array1D<T, N>; M]);
+
+#[repr(C, align(32))]
+pub struct Array3D<T, const M: usize, const N: usize, const P: usize>(pub [Array2D<T, N, P>; M]);
+
+impl<T, const M: usize> Index<usize> for Array1D<T, M> {
+    type Output = T;
 
     #[inline(always)]
     fn index(&self, index: usize) -> &Self::Output {
@@ -13,7 +19,7 @@ impl<const M: usize> Index<usize> for Array1D<M> {
     }
 }
 
-impl<const M: usize> IndexMut<usize> for Array1D<M> {
+impl<T, const M: usize> IndexMut<usize> for Array1D<T, M> {
     #[inline(always)]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         debug_assert!(index < M);
@@ -21,79 +27,43 @@ impl<const M: usize> IndexMut<usize> for Array1D<M> {
     }
 }
 
-// `pub [[f64; N]; M]` causes a stack overflow when accessed
-#[repr(C, align(32))]
-pub struct Array2D<const M: usize, const N: usize>(pub [Array1D<N>; M]);
-
-impl<const M: usize, const N: usize> Index<(usize, usize)> for Array2D<M, N> {
-    type Output = f64;
+impl<T, const M: usize, const N: usize> Index<usize> for Array2D<T, M, N> {
+    type Output = Array1D<T, N>;
 
     #[inline(always)]
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
-        debug_assert!(index.0 < M);
-        debug_assert!(index.1 < N);
-        unsafe { self.0.get_unchecked(index.0).0.get_unchecked(index.1) }
+    fn index(&self, index: usize) -> &Self::Output {
+        debug_assert!(index < M);
+        unsafe { self.0.get_unchecked(index) }
     }
 }
 
-impl<const M: usize, const N: usize> IndexMut<(usize, usize)> for Array2D<M, N> {
+impl<T, const M: usize, const N: usize> IndexMut<usize> for Array2D<T, M, N> {
     #[inline(always)]
-    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
-        debug_assert!(index.0 < M);
-        debug_assert!(index.1 < N);
-        unsafe {
-            self.0
-                .get_unchecked_mut(index.0)
-                .0
-                .get_unchecked_mut(index.1)
-        }
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        debug_assert!(index < M);
+        unsafe { self.0.get_unchecked_mut(index) }
     }
 }
 
-#[repr(C, align(32))]
-pub struct Array3D<const M: usize, const N: usize, const O: usize>(pub [Array2D<N, O>; M]);
-
-impl<const M: usize, const N: usize, const O: usize> Index<(usize, usize, usize)>
-    for Array3D<M, N, O>
-{
-    type Output = f64;
+impl<T, const M: usize, const N: usize, const P: usize> Index<usize> for Array3D<T, M, N, P> {
+    type Output = Array2D<T, N, P>;
 
     #[inline(always)]
-    fn index(&self, index: (usize, usize, usize)) -> &Self::Output {
-        debug_assert!(index.0 < M);
-        debug_assert!(index.1 < N);
-        debug_assert!(index.2 < O);
-        unsafe {
-            self.0
-                .get_unchecked(index.0)
-                .0
-                .get_unchecked(index.1)
-                .0
-                .get_unchecked(index.2)
-        }
+    fn index(&self, index: usize) -> &Self::Output {
+        debug_assert!(index < M);
+        unsafe { self.0.get_unchecked(index) }
     }
 }
 
-impl<const M: usize, const N: usize, const O: usize> IndexMut<(usize, usize, usize)>
-    for Array3D<M, N, O>
-{
+impl<T, const M: usize, const N: usize, const P: usize> IndexMut<usize> for Array3D<T, M, N, P> {
     #[inline(always)]
-    fn index_mut(&mut self, index: (usize, usize, usize)) -> &mut Self::Output {
-        debug_assert!(index.0 < M);
-        debug_assert!(index.1 < N);
-        debug_assert!(index.2 < O);
-        unsafe {
-            self.0
-                .get_unchecked_mut(index.0)
-                .0
-                .get_unchecked_mut(index.1)
-                .0
-                .get_unchecked_mut(index.2)
-        }
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        debug_assert!(index < M);
+        unsafe { self.0.get_unchecked_mut(index) }
     }
 }
 
-pub trait AllocUninit: Sized {
+pub trait ArrayAlloc: Sized {
     fn uninit() -> Box<Self> {
         let layout = std::alloc::Layout::new::<Self>();
         unsafe {
@@ -101,11 +71,42 @@ pub trait AllocUninit: Sized {
             Box::from_raw(raw)
         }
     }
+
+    fn zeroed() -> Box<Self> {
+        let layout = std::alloc::Layout::new::<Self>();
+        unsafe {
+            let raw = std::alloc::alloc_zeroed(layout) as *mut Self;
+            Box::from_raw(raw)
+        }
+    }
 }
 
-impl<const N: usize> AllocUninit for Array1D<N> {}
-impl<const M: usize, const N: usize> AllocUninit for Array2D<M, N> {}
-impl<const M: usize, const N: usize, const O: usize> AllocUninit for Array3D<M, N, O> {}
+impl<T, const N: usize> ArrayAlloc for Array1D<T, N> {}
+impl<T, const M: usize, const N: usize> ArrayAlloc for Array2D<T, M, N> {}
+impl<T, const M: usize, const N: usize, const P: usize> ArrayAlloc for Array3D<T, M, N, P> {}
+
+impl<T, const N: usize> Array2D<T, N, N>
+where
+    T: Copy + ops::Mul<Output = T> + ops::AddAssign<T>,
+{
+    pub fn make_positive_semi_definite(&mut self) {
+        let mut b = Array2D::<T, N, N>::zeroed();
+        let n = N;
+
+        for t in 0..n {
+            for r in 0..n {
+                for s in 0..n {
+                    b[r][s] += self[r][t] * self[s][t];
+                }
+            }
+        }
+        for r in 0..n {
+            for s in 0..n {
+                self[r][s] = b[r][s];
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -113,7 +114,9 @@ mod tests {
     use std::mem::size_of;
 
     #[test]
-    fn test_array_sizes() {
-        assert_eq!(8388608, size_of::<Array2D<1024, 1024>>());
+    fn check_array_sizes() {
+        assert_eq!(1024, size_of::<Array1D<u8, 1024>>());
+        assert_eq!(8388608, size_of::<Array2D<f64, 1024, 1024>>());
+        assert_eq!(67108864, size_of::<Array3D<f32, 256, 256, 256>>());
     }
 }

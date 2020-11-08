@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::config::linear_algebra::kernels::bicg::{DataType, M, N};
-use crate::ndarray2::{Array1D, Array2D, ArrayAlloc};
+use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 

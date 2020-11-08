@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::config::stencils::heat_3d::{DataType, N, TSTEPS};
-use crate::ndarray2::{Array3D, ArrayAlloc};
+use crate::ndarray::{Array3D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 

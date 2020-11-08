@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::config::linear_algebra::kernels::_3mm::{DataType, NI, NJ, NK, NL, NM};
-use crate::ndarray2::{Array2D, ArrayAlloc};
+use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 

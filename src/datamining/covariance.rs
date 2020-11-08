@@ -1,5 +1,5 @@
 use crate::config::datamining::correlation::{DataType, M, N};
-use crate::ndarray2::{Array1D, Array2D, ArrayAlloc};
+use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 

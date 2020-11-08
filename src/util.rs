@@ -1,5 +1,3 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::Array2D;
 use std::time::{Duration, Instant};
 
 // Lifted from bencher crate:
@@ -32,26 +30,4 @@ pub fn time_function<F: FnOnce()>(f: F) -> Duration {
     let now = Instant::now();
     f();
     now.elapsed()
-}
-
-pub fn into_positive_semi_definite<const N: usize>(a: &mut Array2D<N, N>) {
-    let mut b = Array2D::<N, N>::uninit();
-    let n = N;
-    for r in 0..n {
-        for s in 0..n {
-            b[(r, s)] = 0.0;
-        }
-    }
-    for t in 0..n {
-        for r in 0..n {
-            for s in 0..n {
-                b[(r, s)] += a[(r, t)] * a[(s, t)];
-            }
-        }
-    }
-    for r in 0..n {
-        for s in 0..n {
-            a[(r, s)] = b[(r, s)];
-        }
-    }
 }

@@ -85,6 +85,33 @@ pub mod linear_algebra {
             pub const N: usize = 2000;
         }
     }
+    pub mod solvers {
+        pub mod cholesky {
+            pub type DataType = f64;
+            pub const N: usize = 2000;
+        }
+        pub mod durbin {
+            pub type DataType = f64;
+            pub const N: usize = 2000;
+        }
+        pub mod gramschmidt {
+            pub type DataType = f64;
+            pub const M: usize = 1000;
+            pub const N: usize = 1200;
+        }
+        pub mod lu {
+            pub type DataType = f64;
+            pub const N: usize = 2000;
+        }
+        pub mod ludcmp {
+            pub type DataType = f64;
+            pub const N: usize = 2000;
+        }
+        pub mod trisolv {
+            pub type DataType = f64;
+            pub const N: usize = 2000;
+        }
+    }
 }
 
 pub mod medley {

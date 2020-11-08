@@ -1,5 +1,5 @@
 use crate::config::medley::deriche::{DataType, H, W};
-use crate::ndarray2::{Array2D, ArrayAlloc};
+use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 

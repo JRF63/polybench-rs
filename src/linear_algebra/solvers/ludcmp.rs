@@ -1,67 +1,67 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::{Array1D, Array2D};
-use crate::util;
-use std::time::{Duration, Instant};
+#![allow(non_snake_case)]
 
-const N: usize = 2000;
+use crate::config::linear_algebra::solvers::ludcmp::{DataType, N};
+use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
+use crate::util;
+use std::time::Duration;
 
 unsafe fn init_array(
     n: usize,
-    a: &mut Array2D<N, N>,
-    b: &mut Array1D<N>,
-    x: &mut Array1D<N>,
-    y: &mut Array1D<N>,
+    A: &mut Array2D<DataType, N, N>,
+    b: &mut Array1D<DataType, N>,
+    x: &mut Array1D<DataType, N>,
+    y: &mut Array1D<DataType, N>,
 ) {
-    let float_n = n as f64;
+    let float_n = n as DataType;
 
     for i in 0..n {
         x[i] = 0.0;
         y[i] = 0.0;
-        b[i] = (i + 1) as f64 / float_n / 2.0 + 4.0;
+        b[i] = (i + 1) as DataType / float_n / 2.0 + 4.0;
     }
 
     for i in 0..n {
         for j in 0..=i {
-            a[(i, j)] = (-(j as isize) % n as isize) as f64 / n as f64 + 1.0;
+            A[i][j] = (-(j as isize) % n as isize) as DataType / n as DataType + 1.0;
         }
         for j in (i + 1)..n {
-            a[(i, j)] = 0.0;
+            A[i][j] = 0.0;
         }
-        a[(i, i)] = 1.0;
+        A[i][i] = 1.0;
     }
 
-    util::into_positive_semi_definite(a);
+    A.make_positive_semi_definite();
 }
 
 unsafe fn kernel_ludcmp(
     n: usize,
-    a: &mut Array2D<N, N>,
-    b: &Array1D<N>,
-    x: &mut Array1D<N>,
-    y: &mut Array1D<N>,
+    A: &mut Array2D<DataType, N, N>,
+    b: &Array1D<DataType, N>,
+    x: &mut Array1D<DataType, N>,
+    y: &mut Array1D<DataType, N>,
 ) {
     let mut w;
     for i in 0..n {
         for j in 0..i {
-            w = a[(i, j)];
+            w = A[i][j];
             for k in 0..j {
-                w -= a[(i, k)] * a[(k, j)];
+                w -= A[i][k] * A[k][j];
             }
-            a[(i, j)] = w / a[(j, j)];
+            A[i][j] = w / A[j][j];
         }
         for j in i..n {
-            w = a[(i, j)];
+            w = A[i][j];
             for k in 0..i {
-                w -= a[(i, k)] * a[(k, j)];
+                w -= A[i][k] * A[k][j];
             }
-            a[(i, j)] = w;
+            A[i][j] = w;
         }
     }
 
     for i in 0..n {
         w = b[i];
         for j in 0..i {
-            w -= a[(i, j)] * y[j];
+            w -= A[i][j] * y[j];
         }
         y[i] = w;
     }
@@ -69,37 +69,29 @@ unsafe fn kernel_ludcmp(
     for i in (0..n).rev() {
         w = y[i];
         for j in (i + 1)..n {
-            w -= a[(i, j)] * x[j];
+            w -= A[i][j] * x[j];
         }
-        x[i] = w / a[(i, i)];
+        x[i] = w / A[i][i];
     }
 }
 
-pub fn bench(num_runs: usize) -> Duration {
+pub fn bench() -> Duration {
     let n = N;
 
-    let mut a = Array2D::uninit();
+    let mut A = Array2D::uninit();
     let mut b = Array1D::uninit();
     let mut x = Array1D::uninit();
     let mut y = Array1D::uninit();
 
-    let mut min_dur = util::max_duration();
-    for _ in 0..num_runs {
-        unsafe {
-            init_array(n, &mut a, &mut b, &mut x, &mut y);
-
-            util::flush_llc_cache();
-
-            let now = Instant::now();
-            kernel_ludcmp(n, &mut a, &b, &mut x, &mut y);
-            let elapsed = now.elapsed();
-
-            util::black_box(&x);
-
-            if elapsed < min_dur {
-                min_dur = elapsed;
-            }
-        }
+    unsafe {
+        init_array(n, &mut A, &mut b, &mut x, &mut y);
+        let elapsed = util::time_function(|| kernel_ludcmp(n, &mut A, &b, &mut x, &mut y));
+        util::black_box(&x);
+        elapsed
     }
-    min_dur
+}
+
+#[test]
+fn check() {
+    bench();
 }
