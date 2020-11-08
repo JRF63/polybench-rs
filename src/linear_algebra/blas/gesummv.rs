@@ -60,7 +60,7 @@ pub fn bench() -> Duration {
         init_array(n, &mut alpha, &mut beta, &mut A, &mut B, &mut x);
         let elapsed =
             util::time_function(|| kernel_gesummv(n, alpha, beta, &A, &B, &mut tmp, &x, &mut y));
-        util::black_box(&y);
+        util::consume(y);
         elapsed
     }
 }

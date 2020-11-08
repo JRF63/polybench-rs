@@ -5,4 +5,7 @@ authors = ["Joseph Rafael Ferrer <rafael2x0@gmail.com>"]
 edition = "2018"
 license = "GPLv2"
 
+[features]
+print-result = []
+
 [dependencies]

@@ -36,7 +36,7 @@ pub fn bench() -> Duration {
     unsafe {
         init_array(n, &mut path);
         let elapsed = util::time_function(|| kernel_floyd_warshall(n, &mut path));
-        util::black_box(&path);
+        util::consume(path);
         elapsed
     }
 }

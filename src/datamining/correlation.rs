@@ -81,7 +81,7 @@ pub fn bench() -> Duration {
         let elapsed = util::time_function(|| {
             kernel_correlation(m, n, float_n, &mut data, &mut corr, &mut mean, &mut stddev)
         });
-        util::black_box(&corr);
+        util::consume(corr);
         elapsed
     }
 }

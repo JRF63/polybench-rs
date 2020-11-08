@@ -60,7 +60,7 @@ pub fn bench() -> Duration {
     unsafe {
         init_array(n, &mut A, &mut B);
         let elapsed = util::time_function(|| kernel_heat_3d(tsteps, n, &mut A, &mut B));
-        util::black_box(&A);
+        util::consume(A);
         elapsed
     }
 }

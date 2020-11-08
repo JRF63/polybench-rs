@@ -42,7 +42,7 @@ pub fn bench() -> Duration {
     unsafe {
         init_array(n, &mut r);
         let elapsed = util::time_function(|| kernel_durbin(n, &r, &mut y));
-        util::black_box(&y);
+        util::consume(y);
         elapsed
     }
 }

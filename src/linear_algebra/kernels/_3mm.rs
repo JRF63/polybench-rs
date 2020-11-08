@@ -98,7 +98,7 @@ pub fn bench() -> Duration {
         let elapsed = util::time_function(|| {
             kernel_3mm(ni, nj, nk, nl, nm, &mut E, &A, &B, &mut F, &C, &D, &mut G)
         });
-        util::black_box(&G);
+        util::consume(G);
         elapsed
     }
 }

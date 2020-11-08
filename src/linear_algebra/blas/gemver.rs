@@ -101,7 +101,7 @@ pub fn bench() -> Duration {
                 n, alpha, beta, &mut A, &u1, &v1, &u2, &v2, &mut w, &mut x, &y, &z,
             )
         });
-        util::black_box(&w);
+        util::consume(w);
         elapsed
     }
 }

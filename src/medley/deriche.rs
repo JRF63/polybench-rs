@@ -132,7 +132,7 @@ pub fn bench() -> Duration {
         let elapsed = util::time_function(|| {
             kernel_deriche(w, h, alpha, &img_in, &mut img_out, &mut y1, &mut y2)
         });
-        util::black_box(&img_out);
+        util::consume(img_out);
         elapsed
     }
 }

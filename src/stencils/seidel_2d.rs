@@ -41,7 +41,7 @@ pub fn bench() -> Duration {
     unsafe {
         init_array(n, &mut A);
         let elapsed = util::time_function(|| kernel_seidel_2d(tsteps, n, &mut A));
-        util::black_box(&A);
+        util::consume(A);
         elapsed
     }
 }

@@ -86,7 +86,7 @@ pub fn bench() -> Duration {
     unsafe {
         init_array(n, &mut A, &mut b, &mut x, &mut y);
         let elapsed = util::time_function(|| kernel_ludcmp(n, &mut A, &b, &mut x, &mut y));
-        util::black_box(&x);
+        util::consume(x);
         elapsed
     }
 }

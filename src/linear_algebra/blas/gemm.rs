@@ -68,7 +68,7 @@ pub fn bench() -> Duration {
     unsafe {
         init_array(ni, nj, nk, &mut alpha, &mut beta, &mut C, &mut A, &mut B);
         let elapsed = util::time_function(|| kernel_gemm(ni, nj, nk, alpha, beta, &mut C, &A, &B));
-        util::black_box(&C);
+        util::consume(C);
         elapsed
     }
 }

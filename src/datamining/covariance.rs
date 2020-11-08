@@ -65,7 +65,7 @@ pub fn bench() -> Duration {
         let elapsed = util::time_function(|| {
             kernel_covariance(m, n, float_n, &mut data, &mut cov, &mut mean)
         });
-        util::black_box(&cov);
+        util::consume(cov);
         elapsed
     }
 }

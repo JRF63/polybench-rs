@@ -73,7 +73,7 @@ pub fn bench() -> Duration {
     unsafe {
         init_array(n, &mut seq, &mut table);
         let elapsed = util::time_function(|| kernel_nussinov(n, &seq, &mut table));
-        util::black_box(&table);
+        util::consume(table);
         elapsed
     }
 }

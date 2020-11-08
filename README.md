@@ -1,1 +1,1 @@
-TODO: README
+Rust port of [PolyBench/C](http://polybench.sourceforge.net)

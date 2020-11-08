@@ -1,3 +1,4 @@
+use std::fmt;
 use std::ops::{self, Index, IndexMut};
 
 #[repr(C, align(32))]
@@ -63,6 +64,29 @@ impl<T, const M: usize, const N: usize, const P: usize> IndexMut<usize> for Arra
     }
 }
 
+impl<T, const N: usize> Array2D<T, N, N>
+where
+    T: Copy + ops::Mul<Output = T> + ops::AddAssign<T>,
+{
+    pub fn make_positive_semi_definite(&mut self) {
+        let mut b = Array2D::<T, N, N>::zeroed();
+        let n = N;
+
+        for t in 0..n {
+            for r in 0..n {
+                for s in 0..n {
+                    b[r][s] += self[r][t] * self[s][t];
+                }
+            }
+        }
+        for r in 0..n {
+            for s in 0..n {
+                self[r][s] = b[r][s];
+            }
+        }
+    }
+}
+
 pub trait ArrayAlloc: Sized {
     fn uninit() -> Box<Self> {
         let layout = std::alloc::Layout::new::<Self>();
@@ -85,26 +109,45 @@ impl<T, const N: usize> ArrayAlloc for Array1D<T, N> {}
 impl<T, const M: usize, const N: usize> ArrayAlloc for Array2D<T, M, N> {}
 impl<T, const M: usize, const N: usize, const P: usize> ArrayAlloc for Array3D<T, M, N, P> {}
 
-impl<T, const N: usize> Array2D<T, N, N>
-where
-    T: Copy + ops::Mul<Output = T> + ops::AddAssign<T>,
-{
-    pub fn make_positive_semi_definite(&mut self) {
-        let mut b = Array2D::<T, N, N>::zeroed();
-        let n = N;
+impl<T, const N: usize> fmt::Display for Array1D<T, N>
+where T: fmt::Display {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[")?;
+        for x in &self.0[..(self.0.len() - 1)] {
+            write!(f, "{}, ", x)?;
+        }
+        if let Some(last) = self.0.last() {
+            write!(f, "{}]", last)?;
+        }
+        Ok(())
+    }
+}
 
-        for t in 0..n {
-            for r in 0..n {
-                for s in 0..n {
-                    b[r][s] += self[r][t] * self[s][t];
-                }
-            }
+impl<T, const M: usize, const N: usize> fmt::Display for Array2D<T, M, N>
+where T: fmt::Display {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[")?;
+        for x in &self.0[..(self.0.len() - 1)] {
+            write!(f, "{}, ", x)?;
         }
-        for r in 0..n {
-            for s in 0..n {
-                self[r][s] = b[r][s];
-            }
+        if let Some(last) = self.0.last() {
+            write!(f, "{}]", last)?;
         }
+        Ok(())
+    }
+}
+
+impl<T, const M: usize, const N: usize, const P: usize> fmt::Display for Array3D<T, M, N, P> 
+where T: fmt::Display {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[")?;
+        for x in &self.0[..(self.0.len() - 1)] {
+            write!(f, "{}, ", x)?;
+        }
+        if let Some(last) = self.0.last() {
+            write!(f, "{}]", last)?;
+        }
+        Ok(())
     }
 }
 
