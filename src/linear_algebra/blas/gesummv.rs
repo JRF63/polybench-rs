@@ -1,78 +1,71 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::{Array1D, Array2D};
-use crate::util;
-use std::time::{Duration, Instant};
+#![allow(non_snake_case)]
 
-const N: usize = 1300;
+use crate::config::linear_algebra::blas::gesummv::{DataType, N};
+use crate::ndarray2::{Array1D, Array2D, ArrayAlloc};
+use crate::util;
+use std::time::Duration;
 
 unsafe fn init_array(
     n: usize,
-    alpha: &mut f64,
-    beta: &mut f64,
-    a: &mut Array2D<N, N>,
-    b: &mut Array2D<N, N>,
-    x: &mut Array1D<N>,
+    alpha: &mut DataType,
+    beta: &mut DataType,
+    A: &mut Array2D<DataType, N, N>,
+    B: &mut Array2D<DataType, N, N>,
+    x: &mut Array1D<DataType, N>,
 ) {
     *alpha = 1.5;
     *beta = 1.2;
     for i in 0..n {
-        x[i] = (i % n) as f64 / n as f64;
+        x[i] = (i % n) as DataType / n as DataType;
         for j in 0..n {
-            a[(i, j)] = ((i * j + 1) % n) as f64 / n as f64;
-            b[(i, j)] = ((i * j + 2) % n) as f64 / n as f64;
+            A[i][j] = ((i * j + 1) % n) as DataType / n as DataType;
+            B[i][j] = ((i * j + 2) % n) as DataType / n as DataType;
         }
     }
 }
 
 unsafe fn kernel_gesummv(
     n: usize,
-    alpha: f64,
-    beta: f64,
-    a: &Array2D<N, N>,
-    b: &Array2D<N, N>,
-    tmp: &mut Array1D<N>,
-    x: &Array1D<N>,
-    y: &mut Array1D<N>,
+    alpha: DataType,
+    beta: DataType,
+    A: &Array2D<DataType, N, N>,
+    B: &Array2D<DataType, N, N>,
+    tmp: &mut Array1D<DataType, N>,
+    x: &Array1D<DataType, N>,
+    y: &mut Array1D<DataType, N>,
 ) {
     for i in 0..n {
         tmp[i] = 0.0;
         y[i] = 0.0;
         for j in 0..n {
-            tmp[i] = a[(i, j)] * x[j] + tmp[i];
-            y[i] = b[(i, j)] * x[j] + y[i];
+            tmp[i] = A[i][j] * x[j] + tmp[i];
+            y[i] = B[i][j] * x[j] + y[i];
         }
         y[i] = alpha * tmp[i] + beta * y[i];
     }
 }
 
-pub fn bench(num_runs: usize) -> Duration {
+pub fn bench() -> Duration {
     let n = N;
 
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut a = Array2D::uninit();
-    let mut b = Array2D::uninit();
+    let mut A = Array2D::uninit();
+    let mut B = Array2D::uninit();
     let mut tmp = Array1D::uninit();
     let mut x = Array1D::uninit();
     let mut y = Array1D::uninit();
 
-    let mut min_dur = util::max_duration();
-    for _ in 0..num_runs {
-        unsafe {
-            init_array(n, &mut alpha, &mut beta, &mut a, &mut b, &mut x);
-
-            util::flush_llc_cache();
-
-            let now = Instant::now();
-            kernel_gesummv(n, alpha, beta, &a, &b, &mut tmp, &x, &mut y);
-            let elapsed = now.elapsed();
-
-            util::black_box(&y);
-
-            if elapsed < min_dur {
-                min_dur = elapsed;
-            }
-        }
+    unsafe {
+        init_array(n, &mut alpha, &mut beta, &mut A, &mut B, &mut x);
+        let elapsed =
+            util::time_function(|| kernel_gesummv(n, alpha, beta, &A, &B, &mut tmp, &x, &mut y));
+        util::black_box(&y);
+        elapsed
     }
-    min_dur
+}
+
+#[test]
+fn check() {
+    bench();
 }

@@ -1,30 +1,29 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::Array2D;
-use crate::util;
-use std::time::{Duration, Instant};
+#![allow(non_snake_case)]
 
-const M: usize = 1000;
-const N: usize = 1200;
+use crate::config::linear_algebra::blas::syrk::{DataType, M, N};
+use crate::ndarray2::{Array2D, ArrayAlloc};
+use crate::util;
+use std::time::Duration;
 
 unsafe fn init_array(
     n: usize,
     m: usize,
-    alpha: &mut f64,
-    beta: &mut f64,
-    c: &mut Array2D<N, N>,
-    a: &mut Array2D<N, M>,
+    alpha: &mut DataType,
+    beta: &mut DataType,
+    C: &mut Array2D<DataType, N, N>,
+    A: &mut Array2D<DataType, N, M>,
 ) {
     *alpha = 1.5;
     *beta = 1.2;
     for i in 0..n {
         for j in 0..m {
-            a[(i, j)] = ((i * j + 1) % n) as f64 / n as f64;
+            A[i][j] = ((i * j + 1) % n) as DataType / n as DataType;
         }
     }
 
     for i in 0..n {
         for j in 0..n {
-            c[(i, j)] = ((i * j + 2) % m) as f64 / m as f64;
+            C[i][j] = ((i * j + 2) % m) as DataType / m as DataType;
         }
     }
 }
@@ -32,49 +31,41 @@ unsafe fn init_array(
 unsafe fn kernel_syrk(
     n: usize,
     m: usize,
-    alpha: f64,
-    beta: f64,
-    c: &mut Array2D<N, N>,
-    a: &Array2D<N, M>,
+    alpha: DataType,
+    beta: DataType,
+    C: &mut Array2D<DataType, N, N>,
+    A: &Array2D<DataType, N, M>,
 ) {
     for i in 0..n {
         for j in 0..=i {
-            c[(i, j)] *= beta;
+            C[i][j] *= beta;
         }
         for k in 0..m {
             for j in 0..=i {
-                c[(i, j)] += alpha * a[(i, k)] * a[(j, k)];
+                C[i][j] += alpha * A[i][k] * A[j][k];
             }
         }
     }
 }
 
-pub fn bench(num_runs: usize) -> Duration {
+pub fn bench() -> Duration {
     let n = N;
     let m = M;
-
+    
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut c = Array2D::uninit();
-    let mut a = Array2D::uninit();
+    let mut C = Array2D::uninit();
+    let mut A = Array2D::uninit();
 
-    let mut min_dur = util::max_duration();
-    for _ in 0..num_runs {
-        unsafe {
-            init_array(n, m, &mut alpha, &mut beta, &mut c, &mut a);
-
-            util::flush_llc_cache();
-
-            let now = Instant::now();
-            kernel_syrk(n, m, alpha, beta, &mut c, &a);
-            let elapsed = now.elapsed();
-
-            util::black_box(&c);
-
-            if elapsed < min_dur {
-                min_dur = elapsed;
-            }
-        }
+    unsafe {
+        init_array(n, m, &mut alpha, &mut beta, &mut C, &mut A);
+        let elapsed = util::time_function(|| kernel_syrk(n, m, alpha, beta, &mut C, &A));
+        util::black_box(&C);
+        elapsed
     }
-    min_dur
+}
+
+#[test]
+fn check() {
+    bench();
 }

@@ -1,66 +1,63 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::Array2D;
-use crate::util;
-use std::time::{Duration, Instant};
+#![allow(non_snake_case)]
 
-const M: usize = 1000;
-const N: usize = 1200;
+use crate::config::linear_algebra::blas::trmm::{DataType, M, N};
+use crate::ndarray2::{Array2D, ArrayAlloc};
+use crate::util;
+use std::time::Duration;
 
 unsafe fn init_array(
     m: usize,
     n: usize,
-    alpha: &mut f64,
-    a: &mut Array2D<M, M>,
-    b: &mut Array2D<M, N>,
+    alpha: &mut DataType,
+    A: &mut Array2D<DataType, M, M>,
+    B: &mut Array2D<DataType, M, N>,
 ) {
     *alpha = 1.5;
     for i in 0..m {
         for j in 0..i {
-            a[(i, j)] = ((i + j) % m) as f64 / m as f64;
+            A[i][j] = ((i + j) % m) as DataType / m as DataType;
         }
-        a[(i, i)] = 1.0;
+        A[i][i] = 1.0;
         for j in 0..n {
-            b[(i, j)] = (((n + i) - j) % n) as f64 / n as f64;
+            B[i][j] = (((n + i) - j) % n) as DataType / n as DataType;
         }
     }
 }
 
-unsafe fn kernel_trmm(m: usize, n: usize, alpha: f64, a: &Array2D<M, M>, b: &mut Array2D<M, N>) {
+unsafe fn kernel_trmm(
+    m: usize,
+    n: usize,
+    alpha: DataType,
+    A: &Array2D<DataType, M, M>,
+    B: &mut Array2D<DataType, M, N>,
+) {
     for i in 0..m {
         for j in 0..n {
             for k in (i + 1)..m {
-                b[(i, j)] += a[(k, i)] * b[(k, j)];
+                B[i][j] += A[k][i] * B[k][j];
             }
-            b[(i, j)] = alpha * b[(i, j)];
+            B[i][j] = alpha * B[i][j];
         }
     }
 }
 
-pub fn bench(num_runs: usize) -> Duration {
+pub fn bench() -> Duration {
     let m = M;
     let n = N;
 
     let mut alpha = 0.0;
-    let mut a = Array2D::uninit();
-    let mut b = Array2D::uninit();
+    let mut A = Array2D::uninit();
+    let mut B = Array2D::uninit();
 
-    let mut min_dur = util::max_duration();
-    for _ in 0..num_runs {
-        unsafe {
-            init_array(m, n, &mut alpha, &mut a, &mut b);
-
-            util::flush_llc_cache();
-
-            let now = Instant::now();
-            kernel_trmm(m, n, alpha, &a, &mut b);
-            let elapsed = now.elapsed();
-
-            util::black_box(&b);
-
-            if elapsed < min_dur {
-                min_dur = elapsed;
-            }
-        }
+    unsafe {
+        init_array(m, n, &mut alpha, &mut A, &mut B);
+        let elapsed = util::time_function(|| kernel_trmm(m, n, alpha, &A, &mut B));
+        util::black_box(&B);
+        elapsed
     }
-    min_dur
+}
+
+#[test]
+fn check() {
+    bench();
 }

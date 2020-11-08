@@ -19,6 +19,34 @@ pub mod linear_algebra {
             pub const NJ: usize = 1100;
             pub const NK: usize = 1200;
         }
+        pub mod gemver {
+            pub type DataType = f64;
+            pub const N: usize = 2000;
+        }
+        pub mod gesummv {
+            pub type DataType = f64;
+            pub const N: usize = 1300;
+        }
+        pub mod symm {
+            pub type DataType = f64;
+            pub const M: usize = 1000;
+            pub const N: usize = 1200;
+        }
+        pub mod syr2k {
+            pub type DataType = f64;
+            pub const M: usize = 1000;
+            pub const N: usize = 1200;
+        }
+        pub mod syrk {
+            pub type DataType = f64;
+            pub const M: usize = 1000;
+            pub const N: usize = 1200;
+        }
+        pub mod trmm {
+            pub type DataType = f64;
+            pub const M: usize = 1000;
+            pub const N: usize = 1200;
+        }
     }
 }
 
