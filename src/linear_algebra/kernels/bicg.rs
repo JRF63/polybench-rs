@@ -1,25 +1,24 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::{Array1D, Array2D};
-use crate::util;
-use std::time::{Duration, Instant};
+#![allow(non_snake_case)]
 
-const M: usize = 1900;
-const N: usize = 2100;
+use crate::config::linear_algebra::kernels::bicg::{DataType, M, N};
+use crate::ndarray2::{Array1D, Array2D, ArrayAlloc};
+use crate::util;
+use std::time::Duration;
 
 unsafe fn init_array(
     m: usize,
     n: usize,
-    a: &mut Array2D<N, M>,
-    r: &mut Array1D<N>,
-    p: &mut Array1D<M>,
+    A: &mut Array2D<DataType, N, M>,
+    r: &mut Array1D<DataType, N>,
+    p: &mut Array1D<DataType, M>,
 ) {
     for i in 0..m {
-        p[i] = (i % m) as f64 / m as f64;
+        p[i] = (i % m) as DataType / m as DataType;
     }
     for i in 0..n {
-        r[i] = (i % n) as f64 / n as f64;
+        r[i] = (i % n) as DataType / n as DataType;
         for j in 0..m {
-            a[(i, j)] = (i * (j + 1) % n) as f64 / n as f64;
+            A[i][j] = (i * (j + 1) % n) as DataType / n as DataType;
         }
     }
 }
@@ -27,11 +26,11 @@ unsafe fn init_array(
 unsafe fn kernel_bicg(
     m: usize,
     n: usize,
-    a: &Array2D<N, M>,
-    s: &mut Array1D<M>,
-    q: &mut Array1D<N>,
-    p: &Array1D<M>,
-    r: &Array1D<N>,
+    A: &Array2D<DataType, N, M>,
+    s: &mut Array1D<DataType, M>,
+    q: &mut Array1D<DataType, N>,
+    p: &Array1D<DataType, M>,
+    r: &Array1D<DataType, N>,
 ) {
     for i in 0..m {
         s[i] = 0.0;
@@ -39,40 +38,32 @@ unsafe fn kernel_bicg(
     for i in 0..n {
         q[i] = 0.0;
         for j in 0..m {
-            s[j] = s[j] + r[i] * a[(i, j)];
-            q[i] = q[i] + a[(i, j)] * p[j];
+            s[j] = s[j] + r[i] * A[i][j];
+            q[i] = q[i] + A[i][j] * p[j];
         }
     }
 }
 
-pub fn bench(num_runs: usize) -> Duration {
-    let n = N;
+pub fn bench() -> Duration {
     let m = M;
+    let n = N;
 
-    let mut a = Array2D::uninit();
+    let mut A = Array2D::uninit();
     let mut s = Array1D::uninit();
     let mut q = Array1D::uninit();
     let mut p = Array1D::uninit();
     let mut r = Array1D::uninit();
 
-    let mut min_dur = util::max_duration();
-    for _ in 0..num_runs {
-        unsafe {
-            init_array(m, n, &mut a, &mut r, &mut p);
-
-            util::flush_llc_cache();
-
-            let now = Instant::now();
-            kernel_bicg(m, n, &a, &mut s, &mut q, &p, &r);
-            let elapsed = now.elapsed();
-
-            util::black_box(&s);
-            util::black_box(&q);
-
-            if elapsed < min_dur {
-                min_dur = elapsed;
-            }
-        }
+    unsafe {
+        init_array(m, n, &mut A, &mut r, &mut p);
+        let elapsed = util::time_function(|| kernel_bicg(m, n, &A, &mut s, &mut q, &p, &r));
+        util::black_box(&s);
+        util::black_box(&q);
+        elapsed
     }
-    min_dur
+}
+
+#[test]
+fn check() {
+    bench();
 }

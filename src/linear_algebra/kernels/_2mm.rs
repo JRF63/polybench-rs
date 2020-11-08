@@ -1,45 +1,42 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::Array2D;
-use crate::util;
-use std::time::{Duration, Instant};
+#![allow(non_snake_case)]
 
-const NI: usize = 800;
-const NJ: usize = 900;
-const NK: usize = 1100;
-const NL: usize = 1200;
+use crate::config::linear_algebra::kernels::_2mm::{DataType, NI, NJ, NK, NL};
+use crate::ndarray2::{Array2D, ArrayAlloc};
+use crate::util;
+use std::time::Duration;
 
 unsafe fn init_array(
     ni: usize,
     nj: usize,
     nk: usize,
     nl: usize,
-    alpha: &mut f64,
-    beta: &mut f64,
-    a: &mut Array2D<NI, NK>,
-    b: &mut Array2D<NK, NJ>,
-    c: &mut Array2D<NJ, NL>,
-    d: &mut Array2D<NI, NL>,
+    alpha: &mut DataType,
+    beta: &mut DataType,
+    A: &mut Array2D<DataType, NI, NK>,
+    B: &mut Array2D<DataType, NK, NJ>,
+    C: &mut Array2D<DataType, NJ, NL>,
+    D: &mut Array2D<DataType, NI, NL>,
 ) {
     *alpha = 1.5;
     *beta = 1.2;
     for i in 0..ni {
         for j in 0..nk {
-            a[(i, j)] = ((i * j + 1) % ni) as f64 / ni as f64;
+            A[i][j] = ((i * j + 1) % ni) as DataType / ni as DataType;
         }
     }
     for i in 0..nk {
         for j in 0..nj {
-            b[(i, j)] = (i * (j + 1) % nj) as f64 / nj as f64;
+            B[i][j] = (i * (j + 1) % nj) as DataType / nj as DataType;
         }
     }
     for i in 0..nj {
         for j in 0..nl {
-            c[(i, j)] = ((i * (j + 3) + 1) % nl) as f64 / nl as f64;
+            C[i][j] = ((i * (j + 3) + 1) % nl) as DataType / nl as DataType;
         }
     }
     for i in 0..ni {
         for j in 0..nl {
-            d[(i, j)] = (i * (j + 2) % nk) as f64 / nk as f64;
+            D[i][j] = (i * (j + 2) % nk) as DataType / nk as DataType;
         }
     }
 }
@@ -49,33 +46,33 @@ unsafe fn kernel_2mm(
     nj: usize,
     nk: usize,
     nl: usize,
-    alpha: f64,
-    beta: f64,
-    tmp: &mut Array2D<NI, NJ>,
-    a: &Array2D<NI, NK>,
-    b: &Array2D<NK, NJ>,
-    c: &Array2D<NJ, NL>,
-    d: &mut Array2D<NI, NL>,
+    alpha: DataType,
+    beta: DataType,
+    tmp: &mut Array2D<DataType, NI, NJ>,
+    A: &Array2D<DataType, NI, NK>,
+    B: &Array2D<DataType, NK, NJ>,
+    C: &Array2D<DataType, NJ, NL>,
+    D: &mut Array2D<DataType, NI, NL>,
 ) {
     for i in 0..ni {
         for j in 0..nj {
-            tmp[(i, j)] = 0.0;
+            tmp[i][j] = 0.0;
             for k in 0..nk {
-                tmp[(i, j)] += alpha * a[(i, k)] * b[(k, j)];
+                tmp[i][j] += alpha * A[i][k] * B[k][j];
             }
         }
     }
     for i in 0..ni {
         for j in 0..nl {
-            d[(i, j)] *= beta;
+            D[i][j] *= beta;
             for k in 0..nj {
-                d[(i, j)] += tmp[(i, k)] * c[(k, j)];
+                D[i][j] += tmp[i][k] * C[k][j];
             }
         }
     }
 }
 
-pub fn bench(num_runs: usize) -> Duration {
+pub fn bench() -> Duration {
     let ni = NI;
     let nj = NJ;
     let nk = NK;
@@ -84,30 +81,24 @@ pub fn bench(num_runs: usize) -> Duration {
     let mut alpha = 0.0;
     let mut beta = 0.0;
     let mut tmp = Array2D::uninit();
-    let mut a = Array2D::uninit();
-    let mut b = Array2D::uninit();
-    let mut c = Array2D::uninit();
-    let mut d = Array2D::uninit();
+    let mut A = Array2D::uninit();
+    let mut B = Array2D::uninit();
+    let mut C = Array2D::uninit();
+    let mut D = Array2D::uninit();
 
-    let mut min_dur = util::max_duration();
-    for _ in 0..num_runs {
-        unsafe {
-            init_array(
-                ni, nj, nk, nl, &mut alpha, &mut beta, &mut a, &mut b, &mut c, &mut d,
-            );
-
-            util::flush_llc_cache();
-
-            let now = Instant::now();
-            kernel_2mm(ni, nj, nk, nl, alpha, beta, &mut tmp, &a, &b, &c, &mut d);
-            let elapsed = now.elapsed();
-
-            util::black_box(&d);
-
-            if elapsed < min_dur {
-                min_dur = elapsed;
-            }
-        }
+    unsafe {
+        init_array(
+            ni, nj, nk, nl, &mut alpha, &mut beta, &mut A, &mut B, &mut C, &mut D,
+        );
+        let elapsed = util::time_function(|| {
+            kernel_2mm(ni, nj, nk, nl, alpha, beta, &mut tmp, &A, &B, &C, &mut D)
+        });
+        util::black_box(&D);
+        elapsed
     }
-    min_dur
+}
+
+#[test]
+fn check() {
+    bench();
 }

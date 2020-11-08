@@ -1,19 +1,23 @@
-use crate::ndarray::AllocUninit;
-use crate::ndarray::{Array1D, Array2D};
+#![allow(non_snake_case)]
+
+use crate::config::linear_algebra::kernels::atax::{DataType, M, N};
+use crate::ndarray2::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-const M: usize = 1900;
-const N: usize = 2100;
-
-unsafe fn init_array(m: usize, n: usize, a: &mut Array2D<M, N>, x: &mut Array1D<N>) {
-    let float_n = n as f64;
+unsafe fn init_array(
+    m: usize,
+    n: usize,
+    A: &mut Array2D<DataType, M, N>,
+    x: &mut Array1D<DataType, N>,
+) {
+    let float_n = n as DataType;
     for i in 0..n {
-        x[i] = 1.0 + (i as f64 / float_n);
+        x[i] = 1.0 + (i as DataType / float_n);
     }
     for i in 0..m {
         for j in 0..n {
-            a[(i, j)] = ((i + j) % n) as f64 / (5 * m) as f64;
+            A[i][j] = ((i + j) % n) as DataType / (5 * m) as DataType;
         }
     }
 }
@@ -21,10 +25,10 @@ unsafe fn init_array(m: usize, n: usize, a: &mut Array2D<M, N>, x: &mut Array1D<
 unsafe fn kernel_atax(
     m: usize,
     n: usize,
-    a: &Array2D<M, N>,
-    x: &Array1D<N>,
-    y: &mut Array1D<N>,
-    tmp: &mut Array1D<M>,
+    A: &Array2D<DataType, M, N>,
+    x: &Array1D<DataType, N>,
+    y: &mut Array1D<DataType, N>,
+    tmp: &mut Array1D<DataType, M>,
 ) {
     for i in 0..n {
         y[i] = 0.0;
@@ -32,40 +36,32 @@ unsafe fn kernel_atax(
     for i in 0..m {
         tmp[i] = 0.0;
         for j in 0..n {
-            tmp[i] = tmp[i] + a[(i, j)] * x[j];
+            tmp[i] = tmp[i] + A[i][j] * x[j];
         }
         for j in 0..n {
-            y[j] = y[j] + a[(i, j)] * tmp[i];
+            y[j] = y[j] + A[i][j] * tmp[i];
         }
     }
 }
 
-pub fn bench(num_runs: usize) -> Duration {
+pub fn bench() -> Duration {
     let m = M;
     let n = N;
 
-    let mut a = Array2D::uninit();
+    let mut A = Array2D::uninit();
     let mut x = Array1D::uninit();
     let mut y = Array1D::uninit();
     let mut tmp = Array1D::uninit();
 
-    let mut min_dur = util::max_duration();
-    for _ in 0..num_runs {
-        unsafe {
-            init_array(m, n, &mut a, &mut x);
-
-            util::flush_llc_cache();
-
-            let now = Instant::now();
-            kernel_atax(m, n, &a, &x, &mut y, &mut tmp);
-            let elapsed = now.elapsed();
-
-            util::black_box(&y);
-
-            if elapsed < min_dur {
-                min_dur = elapsed;
-            }
-        }
+    unsafe {
+        init_array(m, n, &mut A, &mut x);
+        let elapsed = util::time_function(|| kernel_atax(m, n, &A, &x, &mut y, &mut tmp));
+        util::black_box(&y);
+        elapsed
     }
-    min_dur
+}
+
+#[test]
+fn check() {
+    bench();
 }

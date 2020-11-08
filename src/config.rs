@@ -48,6 +48,43 @@ pub mod linear_algebra {
             pub const N: usize = 1200;
         }
     }
+    pub mod kernels {
+        pub mod _2mm {
+            pub type DataType = f64;
+            pub const NI: usize = 800;
+            pub const NJ: usize = 900;
+            pub const NK: usize = 1100;
+            pub const NL: usize = 1200;
+        }
+        pub mod _3mm {
+            pub type DataType = f64;
+            pub const NI: usize = 800;
+            pub const NJ: usize = 900;
+            pub const NK: usize = 1000;
+            pub const NL: usize = 1100;
+            pub const NM: usize = 1200;
+        }
+        pub mod atax {
+            pub type DataType = f64;
+            pub const M: usize = 1900;
+            pub const N: usize = 2100;
+        }
+        pub mod bicg {
+            pub type DataType = f64;
+            pub const M: usize = 1900;
+            pub const N: usize = 2100;
+        }
+        pub mod doitgen {
+            pub type DataType = f64;
+            pub const NP: usize = 160;
+            pub const NQ: usize = 140;
+            pub const NR: usize = 150;
+        }
+        pub mod mvt {
+            pub type DataType = f64;
+            pub const N: usize = 2000;
+        }
+    }
 }
 
 pub mod medley {

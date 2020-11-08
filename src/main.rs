@@ -1,15 +1,15 @@
 #![allow(dead_code)]
 #![feature(min_const_generics)]
 
-mod datamining;
-mod linear_algebra;
-mod medley;
-mod stencils;
+pub mod datamining;
+pub mod linear_algebra;
+pub mod medley;
+pub mod stencils;
 
-mod config;
-mod ndarray;
-mod ndarray2;
-mod util;
+pub mod config;
+pub mod ndarray;
+pub mod ndarray2;
+pub mod util;
 
 // use std::time::Duration;
 
