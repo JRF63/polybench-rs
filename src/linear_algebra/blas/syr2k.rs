@@ -54,7 +54,7 @@ unsafe fn kernel_syr2k(
 pub fn bench() -> Duration {
     let n = N;
     let m = M;
-    
+
     let mut alpha = 0.0;
     let mut beta = 0.0;
     let mut C = Array2D::uninit();

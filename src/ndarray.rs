@@ -110,7 +110,9 @@ impl<T, const M: usize, const N: usize> ArrayAlloc for Array2D<T, M, N> {}
 impl<T, const M: usize, const N: usize, const P: usize> ArrayAlloc for Array3D<T, M, N, P> {}
 
 impl<T, const N: usize> fmt::Display for Array1D<T, N>
-where T: fmt::Display {
+where
+    T: fmt::Display,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[")?;
         for x in &self.0[..(self.0.len() - 1)] {
@@ -124,7 +126,9 @@ where T: fmt::Display {
 }
 
 impl<T, const M: usize, const N: usize> fmt::Display for Array2D<T, M, N>
-where T: fmt::Display {
+where
+    T: fmt::Display,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[")?;
         for x in &self.0[..(self.0.len() - 1)] {
@@ -137,8 +141,10 @@ where T: fmt::Display {
     }
 }
 
-impl<T, const M: usize, const N: usize, const P: usize> fmt::Display for Array3D<T, M, N, P> 
-where T: fmt::Display {
+impl<T, const M: usize, const N: usize, const P: usize> fmt::Display for Array3D<T, M, N, P>
+where
+    T: fmt::Display,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[")?;
         for x in &self.0[..(self.0.len() - 1)] {
