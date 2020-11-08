@@ -1,5 +1,5 @@
 use crate::config::linear_algebra::blas::gemm::{DataType, NI, NJ, NK};
-use crate::ndarray2::{Array2D, HeapAlloc};
+use crate::ndarray2::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 

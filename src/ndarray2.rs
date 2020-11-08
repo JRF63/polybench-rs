@@ -63,7 +63,7 @@ impl<T, const P: usize, const Q: usize, const R: usize> IndexMut<usize> for Arra
     }
 }
 
-pub trait HeapAlloc: Sized {
+pub trait ArrayAlloc: Sized {
     fn uninit() -> Box<Self> {
         let layout = std::alloc::Layout::new::<Self>();
         unsafe {
@@ -81,9 +81,9 @@ pub trait HeapAlloc: Sized {
     }
 }
 
-impl<T, const N: usize> HeapAlloc for Array1D<T, N> {}
-impl<T, const M: usize, const N: usize> HeapAlloc for Array2D<T, M, N> {}
-impl<T, const P: usize, const Q: usize, const R: usize> HeapAlloc for Array3D<T, P, Q, R> {}
+impl<T, const N: usize> ArrayAlloc for Array1D<T, N> {}
+impl<T, const M: usize, const N: usize> ArrayAlloc for Array2D<T, M, N> {}
+impl<T, const P: usize, const Q: usize, const R: usize> ArrayAlloc for Array3D<T, P, Q, R> {}
 
 impl<T, const N: usize> Array2D<T, N, N>
 where

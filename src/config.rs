@@ -21,3 +21,19 @@ pub mod linear_algebra {
         }
     }
 }
+
+pub mod medley {
+    pub mod deriche {
+        pub type DataType = f32;
+        pub const W: usize = 4096;
+        pub const H: usize = 2160;
+    }
+    pub mod floyd_warshall {
+        pub type DataType = i32;
+        pub const N: usize = 2800;
+    }
+    pub mod nussinov {
+        pub type DataType = i32;
+        pub const N: usize = 2500;
+    }
+}

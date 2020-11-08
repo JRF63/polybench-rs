@@ -1,5 +1,5 @@
 use crate::config::datamining::correlation::{DataType, M, N};
-use crate::ndarray2::{Array1D, Array2D, HeapAlloc};
+use crate::ndarray2::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
@@ -71,6 +71,6 @@ pub fn bench() -> Duration {
 }
 
 #[test]
-fn test_covariance() {
+fn check() {
     bench();
 }

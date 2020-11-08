@@ -48,7 +48,7 @@ unsafe fn kernel_bicg(
 pub fn bench(num_runs: usize) -> Duration {
     let n = N;
     let m = M;
-    
+
     let mut a = Array2D::uninit();
     let mut s = Array1D::uninit();
     let mut q = Array1D::uninit();
