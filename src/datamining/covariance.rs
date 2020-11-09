@@ -1,4 +1,4 @@
-use crate::config::datamining::correlation::{DataType, M, N};
+use crate::config::datamining::covariance::{DataType, M, N};
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
@@ -7,12 +7,12 @@ unsafe fn init_array(
     m: usize,
     n: usize,
     float_n: &mut DataType,
-    data: &mut Array2D<DataType, N, M>,
+    data: &mut Array2D<DataType, M, N>,
 ) {
     *float_n = n as DataType;
-    for i in 0..n {
-        for j in 0..m {
-            data[i][j] = (i * j) as DataType / M as DataType;
+    for i in 0..m {
+        for j in 0..n {
+            data[i][j] = (i * j) as DataType / N as DataType;
         }
     }
 }
@@ -21,28 +21,28 @@ unsafe fn kernel_covariance(
     m: usize,
     n: usize,
     float_n: DataType,
-    data: &mut Array2D<DataType, N, M>,
-    cov: &mut Array2D<DataType, M, M>,
-    mean: &mut Array1D<DataType, M>,
+    data: &mut Array2D<DataType, M, N>,
+    cov: &mut Array2D<DataType, N, N>,
+    mean: &mut Array1D<DataType, N>,
 ) {
-    for j in 0..m {
+    for j in 0..n {
         mean[j] = 0.0;
-        for i in 0..n {
+        for i in 0..m {
             mean[j] += data[i][j];
         }
         mean[j] /= float_n;
     }
 
-    for i in 0..n {
-        for j in 0..m {
+    for i in 0..m {
+        for j in 0..n {
             data[i][j] -= mean[j];
         }
     }
 
-    for i in 0..m {
-        for j in i..m {
+    for i in 0..n {
+        for j in i..n {
             cov[i][j] = 0.0;
-            for k in 0..n {
+            for k in 0..m {
                 cov[i][j] += data[k][i] * data[k][j];
             }
             cov[i][j] /= float_n - 1.0;
@@ -52,8 +52,8 @@ unsafe fn kernel_covariance(
 }
 
 pub fn bench() -> Duration {
-    let n = N;
     let m = M;
+    let n = N;
 
     let mut float_n = 0.0;
     let mut data = Array2D::uninit();

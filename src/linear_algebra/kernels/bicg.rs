@@ -8,17 +8,17 @@ use std::time::Duration;
 unsafe fn init_array(
     m: usize,
     n: usize,
-    A: &mut Array2D<DataType, N, M>,
-    r: &mut Array1D<DataType, N>,
-    p: &mut Array1D<DataType, M>,
+    A: &mut Array2D<DataType, M, N>,
+    r: &mut Array1D<DataType, M>,
+    p: &mut Array1D<DataType, N>,
 ) {
-    for i in 0..m {
-        p[i] = (i % m) as DataType / m as DataType;
-    }
     for i in 0..n {
-        r[i] = (i % n) as DataType / n as DataType;
-        for j in 0..m {
-            A[i][j] = (i * (j + 1) % n) as DataType / n as DataType;
+        p[i] = (i % n) as DataType / n as DataType;
+    }
+    for i in 0..m {
+        r[i] = (i % m) as DataType / m as DataType;
+        for j in 0..n {
+            A[i][j] = (i * (j + 1) % m) as DataType / m as DataType;
         }
     }
 }
@@ -26,18 +26,18 @@ unsafe fn init_array(
 unsafe fn kernel_bicg(
     m: usize,
     n: usize,
-    A: &Array2D<DataType, N, M>,
-    s: &mut Array1D<DataType, M>,
-    q: &mut Array1D<DataType, N>,
-    p: &Array1D<DataType, M>,
-    r: &Array1D<DataType, N>,
+    A: &Array2D<DataType, M, N>,
+    s: &mut Array1D<DataType, N>,
+    q: &mut Array1D<DataType, M>,
+    p: &Array1D<DataType, N>,
+    r: &Array1D<DataType, M>,
 ) {
-    for i in 0..m {
+    for i in 0..n {
         s[i] = 0.0;
     }
-    for i in 0..n {
+    for i in 0..m {
         q[i] = 0.0;
-        for j in 0..m {
+        for j in 0..n {
             s[j] = s[j] + r[i] * A[i][j];
             q[i] = q[i] + A[i][j] * p[j];
         }
