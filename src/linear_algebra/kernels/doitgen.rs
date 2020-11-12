@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::kernels::doitgen::{DataType, NP, NQ, NR};
+use crate::config::linear_algebra::kernels::doitgen::DataType;
 use crate::ndarray::{Array1D, Array2D, Array3D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const NP: usize, const NQ: usize, const NR: usize>(
     nr: usize,
     nq: usize,
     np: usize,
@@ -26,7 +26,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_doitgen(
+unsafe fn kernel_doitgen<const NP: usize, const NQ: usize, const NR: usize>(
     nr: usize,
     nq: usize,
     np: usize,
@@ -49,14 +49,14 @@ unsafe fn kernel_doitgen(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const NP: usize, const NQ: usize, const NR: usize>() -> Duration {
     let nr = NR;
     let nq = NQ;
     let np = NP;
 
-    let mut A = Array3D::uninit();
-    let mut sum = Array1D::uninit();
-    let mut C4 = Array2D::uninit();
+    let mut A = Array3D::<DataType, NR, NQ, NP>::uninit();
+    let mut sum = Array1D::<DataType, NP>::uninit();
+    let mut C4 = Array2D::<DataType, NP, NP>::uninit();
 
     unsafe {
         init_array(nr, nq, np, &mut A, &mut C4);
@@ -68,5 +68,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<6, 4, 5>();
 }

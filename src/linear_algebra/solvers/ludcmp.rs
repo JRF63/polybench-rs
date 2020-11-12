@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::solvers::ludcmp::{DataType, N};
+use crate::config::linear_algebra::solvers::ludcmp::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const N: usize>(
     n: usize,
     A: &mut Array2D<DataType, N, N>,
     b: &mut Array1D<DataType, N>,
@@ -33,7 +33,7 @@ unsafe fn init_array(
     A.make_positive_semi_definite();
 }
 
-unsafe fn kernel_ludcmp(
+unsafe fn kernel_ludcmp<const N: usize>(
     n: usize,
     A: &mut Array2D<DataType, N, N>,
     b: &Array1D<DataType, N>,
@@ -75,13 +75,13 @@ unsafe fn kernel_ludcmp(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize>() -> Duration {
     let n = N;
 
-    let mut A = Array2D::uninit();
-    let mut b = Array1D::uninit();
-    let mut x = Array1D::uninit();
-    let mut y = Array1D::uninit();
+    let mut A = Array2D::<DataType, N, N>::uninit();
+    let mut b = Array1D::<DataType, N>::uninit();
+    let mut x = Array1D::<DataType, N>::uninit();
+    let mut y = Array1D::<DataType, N>::uninit();
 
     unsafe {
         init_array(n, &mut A, &mut b, &mut x, &mut y);
@@ -93,5 +93,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<20>();
 }

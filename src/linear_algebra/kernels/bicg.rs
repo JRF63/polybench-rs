@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::kernels::bicg::{DataType, M, N};
+use crate::config::linear_algebra::kernels::bicg::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     A: &mut Array2D<DataType, M, N>,
@@ -23,7 +23,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_bicg(
+unsafe fn kernel_bicg<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     A: &Array2D<DataType, M, N>,
@@ -44,15 +44,15 @@ unsafe fn kernel_bicg(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const M: usize, const N: usize>() -> Duration {
     let m = M;
     let n = N;
 
-    let mut A = Array2D::uninit();
-    let mut s = Array1D::uninit();
-    let mut q = Array1D::uninit();
-    let mut p = Array1D::uninit();
-    let mut r = Array1D::uninit();
+    let mut A = Array2D::<DataType, M, N>::uninit();
+    let mut s = Array1D::<DataType, N>::uninit();
+    let mut q = Array1D::<DataType, M>::uninit();
+    let mut p = Array1D::<DataType, N>::uninit();
+    let mut r = Array1D::<DataType, M>::uninit();
 
     unsafe {
         init_array(m, n, &mut A, &mut r, &mut p);
@@ -65,5 +65,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<19, 21>();
 }

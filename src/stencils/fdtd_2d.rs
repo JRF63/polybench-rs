@@ -1,9 +1,9 @@
-use crate::config::stencils::fdtd_2d::{DataType, NX, NY, TMAX};
+use crate::config::stencils::fdtd_2d::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const NX: usize, const NY: usize, const TMAX: usize>(
     tmax: usize,
     nx: usize,
     ny: usize,
@@ -24,7 +24,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_fdtd_2d(
+unsafe fn kernel_fdtd_2d<const NX: usize, const NY: usize, const TMAX: usize>(
     tmax: usize,
     nx: usize,
     ny: usize,
@@ -55,15 +55,15 @@ unsafe fn kernel_fdtd_2d(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const NX: usize, const NY: usize, const TMAX: usize>() -> Duration {
     let tmax = TMAX;
     let nx = NX;
     let ny = NY;
 
-    let mut ex = Array2D::uninit();
-    let mut ey = Array2D::uninit();
-    let mut hz = Array2D::uninit();
-    let mut fict = Array1D::uninit();
+    let mut ex = Array2D::<DataType, NX, NY>::uninit();
+    let mut ey = Array2D::<DataType, NX, NY>::uninit();
+    let mut hz = Array2D::<DataType, NX, NY>::uninit();
+    let mut fict = Array1D::<DataType, TMAX>::uninit();
 
     unsafe {
         init_array(tmax, nx, ny, &mut ex, &mut ey, &mut hz, &mut fict);
@@ -78,5 +78,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<10, 12, 5>();
 }

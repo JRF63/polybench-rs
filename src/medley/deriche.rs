@@ -1,9 +1,9 @@
-use crate::config::medley::deriche::{DataType, H, W};
+use crate::config::medley::deriche::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const H: usize, const W: usize>(
     w: usize,
     h: usize,
     alpha: &mut DataType,
@@ -17,7 +17,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_deriche(
+unsafe fn kernel_deriche<const H: usize, const W: usize>(
     w: usize,
     h: usize,
     alpha: DataType,
@@ -117,15 +117,15 @@ unsafe fn kernel_deriche(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const H: usize, const W: usize>() -> Duration {
     let w = W;
     let h = H;
 
     let mut alpha = 0.0;
-    let mut img_in = Array2D::uninit();
-    let mut img_out = Array2D::uninit();
-    let mut y1 = Array2D::uninit();
-    let mut y2 = Array2D::uninit();
+    let mut img_in = Array2D::<DataType, W, H>::uninit();
+    let mut img_out = Array2D::<DataType, W, H>::uninit();
+    let mut y1 = Array2D::<DataType, W, H>::uninit();
+    let mut y2 = Array2D::<DataType, W, H>::uninit();
 
     unsafe {
         init_array(w, h, &mut alpha, &mut img_in);
@@ -139,5 +139,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<16, 9>();
 }

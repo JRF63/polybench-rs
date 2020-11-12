@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::blas::gesummv::{DataType, N};
+use crate::config::linear_algebra::blas::gesummv::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const N: usize>(
     n: usize,
     alpha: &mut DataType,
     beta: &mut DataType,
@@ -24,7 +24,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_gesummv(
+unsafe fn kernel_gesummv<const N: usize>(
     n: usize,
     alpha: DataType,
     beta: DataType,
@@ -45,16 +45,16 @@ unsafe fn kernel_gesummv(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize>() -> Duration {
     let n = N;
 
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut A = Array2D::uninit();
-    let mut B = Array2D::uninit();
-    let mut tmp = Array1D::uninit();
-    let mut x = Array1D::uninit();
-    let mut y = Array1D::uninit();
+    let mut A = Array2D::<DataType, N, N>::uninit();
+    let mut B = Array2D::<DataType, N, N>::uninit();
+    let mut tmp = Array1D::<DataType, N>::uninit();
+    let mut x = Array1D::<DataType, N>::uninit();
+    let mut y = Array1D::<DataType, N>::uninit();
 
     unsafe {
         init_array(n, &mut alpha, &mut beta, &mut A, &mut B, &mut x);
@@ -67,5 +67,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<13>();
 }

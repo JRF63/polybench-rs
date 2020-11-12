@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::blas::gemver::{DataType, N};
+use crate::config::linear_algebra::blas::gemver::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const N: usize>(
     n: usize,
     alpha: &mut DataType,
     beta: &mut DataType,
@@ -39,7 +39,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_gemver(
+unsafe fn kernel_gemver<const N: usize>(
     n: usize,
     alpha: DataType,
     beta: DataType,
@@ -76,20 +76,20 @@ unsafe fn kernel_gemver(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize>() -> Duration {
     let n = N;
 
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut A = Array2D::uninit();
-    let mut u1 = Array1D::uninit();
-    let mut v1 = Array1D::uninit();
-    let mut u2 = Array1D::uninit();
-    let mut v2 = Array1D::uninit();
-    let mut w = Array1D::uninit();
-    let mut x = Array1D::uninit();
-    let mut y = Array1D::uninit();
-    let mut z = Array1D::uninit();
+    let mut A = Array2D::<DataType, N, N>::uninit();
+    let mut u1 = Array1D::<DataType, N>::uninit();
+    let mut v1 = Array1D::<DataType, N>::uninit();
+    let mut u2 = Array1D::<DataType, N>::uninit();
+    let mut v2 = Array1D::<DataType, N>::uninit();
+    let mut w = Array1D::<DataType, N>::uninit();
+    let mut x = Array1D::<DataType, N>::uninit();
+    let mut y = Array1D::<DataType, N>::uninit();
+    let mut z = Array1D::<DataType, N>::uninit();
 
     unsafe {
         init_array(
@@ -108,5 +108,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<20>();
 }

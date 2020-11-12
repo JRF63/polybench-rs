@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::solvers::trisolv::{DataType, N};
+use crate::config::linear_algebra::solvers::trisolv::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const N: usize>(
     n: usize,
     L: &mut Array2D<DataType, N, N>,
     x: &mut Array1D<DataType, N>,
@@ -20,7 +20,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_trisolv(
+unsafe fn kernel_trisolv<const N: usize>(
     n: usize,
     L: &Array2D<DataType, N, N>,
     x: &mut Array1D<DataType, N>,
@@ -35,12 +35,12 @@ unsafe fn kernel_trisolv(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize>() -> Duration {
     let n = N;
 
-    let mut L = Array2D::uninit();
-    let mut x = Array1D::uninit();
-    let mut b = Array1D::uninit();
+    let mut L = Array2D::<DataType, N, N>::uninit();
+    let mut x = Array1D::<DataType, N>::uninit();
+    let mut b = Array1D::<DataType, N>::uninit();
 
     unsafe {
         init_array(n, &mut L, &mut x, &mut b);
@@ -52,5 +52,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<20>();
 }

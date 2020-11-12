@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::blas::gemm::{DataType, NI, NJ, NK};
+use crate::config::linear_algebra::blas::gemm::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const NI: usize, const NJ: usize, const NK: usize>(
     ni: usize,
     nj: usize,
     nk: usize,
@@ -34,7 +34,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_gemm(
+unsafe fn kernel_gemm<const NI: usize, const NJ: usize, const NK: usize>(
     ni: usize,
     nj: usize,
     nk: usize,
@@ -54,16 +54,16 @@ unsafe fn kernel_gemm(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const NI: usize, const NJ: usize, const NK: usize>() -> Duration {
     let ni = NI;
     let nj = NJ;
     let nk = NK;
 
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut C = Array2D::uninit();
-    let mut A = Array2D::uninit();
-    let mut B = Array2D::uninit();
+    let mut C = Array2D::<DataType, NI, NJ>::uninit();
+    let mut A = Array2D::<DataType, NI, NK>::uninit();
+    let mut B = Array2D::<DataType, NK, NJ>::uninit();
 
     unsafe {
         init_array(ni, nj, nk, &mut alpha, &mut beta, &mut C, &mut A, &mut B);
@@ -75,5 +75,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<10, 11, 12>();
 }

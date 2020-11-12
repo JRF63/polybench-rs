@@ -1,11 +1,14 @@
 #![allow(non_snake_case)]
 
-use crate::config::stencils::seidel_2d::{DataType, N, TSTEPS};
+use crate::config::stencils::seidel_2d::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(n: usize, A: &mut Array2D<DataType, N, N>) {
+unsafe fn init_array<const N: usize, const TSTEPS: usize>(
+    n: usize,
+    A: &mut Array2D<DataType, N, N>,
+) {
     for i in 0..n {
         for j in 0..n {
             A[i][j] = (i * (j + 2) + 2) as DataType / n as DataType;
@@ -13,7 +16,11 @@ unsafe fn init_array(n: usize, A: &mut Array2D<DataType, N, N>) {
     }
 }
 
-unsafe fn kernel_seidel_2d(tsteps: usize, n: usize, A: &mut Array2D<DataType, N, N>) {
+unsafe fn kernel_seidel_2d<const N: usize, const TSTEPS: usize>(
+    tsteps: usize,
+    n: usize,
+    A: &mut Array2D<DataType, N, N>,
+) {
     for _ in 0..tsteps {
         for i in 1..(n - 1) {
             for j in 1..(n - 1) {
@@ -32,15 +39,15 @@ unsafe fn kernel_seidel_2d(tsteps: usize, n: usize, A: &mut Array2D<DataType, N,
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize, const TSTEPS: usize>() -> Duration {
     let n = N;
     let tsteps = TSTEPS;
 
-    let mut A = Array2D::uninit();
+    let mut A = Array2D::<DataType, N, N>::uninit();
 
     unsafe {
-        init_array(n, &mut A);
-        let elapsed = util::time_function(|| kernel_seidel_2d(tsteps, n, &mut A));
+        init_array::<N, TSTEPS>(n, &mut A);
+        let elapsed = util::time_function(|| kernel_seidel_2d::<N, TSTEPS>(tsteps, n, &mut A));
         util::consume(A);
         elapsed
     }
@@ -48,5 +55,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<20, 5>();
 }

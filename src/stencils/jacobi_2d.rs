@@ -1,11 +1,15 @@
 #![allow(non_snake_case)]
 
-use crate::config::stencils::jacobi_2d::{DataType, N, TSTEPS};
+use crate::config::stencils::jacobi_2d::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(n: usize, A: &mut Array2D<DataType, N, N>, B: &mut Array2D<DataType, N, N>) {
+unsafe fn init_array<const N: usize, const TSTEPS: usize>(
+    n: usize,
+    A: &mut Array2D<DataType, N, N>,
+    B: &mut Array2D<DataType, N, N>,
+) {
     for i in 0..n {
         for j in 0..n {
             A[i][j] = (i * (j + 2) + 2) as DataType / n as DataType;
@@ -14,7 +18,7 @@ unsafe fn init_array(n: usize, A: &mut Array2D<DataType, N, N>, B: &mut Array2D<
     }
 }
 
-unsafe fn kernel_jacobi_2d(
+unsafe fn kernel_jacobi_2d<const N: usize, const TSTEPS: usize>(
     tsteps: usize,
     n: usize,
     A: &mut Array2D<DataType, N, N>,
@@ -34,16 +38,17 @@ unsafe fn kernel_jacobi_2d(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize, const TSTEPS: usize>() -> Duration {
     let n = N;
     let tsteps = TSTEPS;
 
-    let mut A = Array2D::uninit();
-    let mut B = Array2D::uninit();
+    let mut A = Array2D::<DataType, N, N>::uninit();
+    let mut B = Array2D::<DataType, N, N>::uninit();
 
     unsafe {
-        init_array(n, &mut A, &mut B);
-        let elapsed = util::time_function(|| kernel_jacobi_2d(tsteps, n, &mut A, &mut B));
+        init_array::<N, TSTEPS>(n, &mut A, &mut B);
+        let elapsed =
+            util::time_function(|| kernel_jacobi_2d::<N, TSTEPS>(tsteps, n, &mut A, &mut B));
         util::consume(A);
         elapsed
     }
@@ -51,5 +56,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<13, 5>();
 }

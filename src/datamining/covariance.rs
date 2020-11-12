@@ -1,9 +1,9 @@
-use crate::config::datamining::covariance::{DataType, M, N};
+use crate::config::datamining::covariance::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: &mut DataType,
@@ -17,7 +17,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_covariance(
+unsafe fn kernel_covariance<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: DataType,
@@ -51,14 +51,14 @@ unsafe fn kernel_covariance(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const M: usize, const N: usize>() -> Duration {
     let m = M;
     let n = N;
 
     let mut float_n = 0.0;
-    let mut data = Array2D::uninit();
-    let mut cov = Array2D::uninit();
-    let mut mean = Array1D::uninit();
+    let mut data = Array2D::<DataType, M, N>::uninit();
+    let mut cov = Array2D::<DataType, N, N>::uninit();
+    let mut mean = Array1D::<DataType, N>::uninit();
 
     unsafe {
         init_array(m, n, &mut float_n, &mut data);
@@ -72,5 +72,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<12, 14>();
 }

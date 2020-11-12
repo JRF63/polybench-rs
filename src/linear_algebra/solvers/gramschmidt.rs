@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::solvers::gramschmidt::{DataType, M, N};
+use crate::config::linear_algebra::solvers::gramschmidt::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     A: &mut Array2D<DataType, M, N>,
@@ -25,7 +25,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_gramschmidt(
+unsafe fn kernel_gramschmidt<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     A: &mut Array2D<DataType, M, N>,
@@ -53,13 +53,13 @@ unsafe fn kernel_gramschmidt(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const M: usize, const N: usize>() -> Duration {
     let m = M;
     let n = N;
 
-    let mut A = Array2D::uninit();
-    let mut R = Array2D::uninit();
-    let mut Q = Array2D::uninit();
+    let mut A = Array2D::<DataType, M, N>::uninit();
+    let mut R = Array2D::<DataType, N, N>::uninit();
+    let mut Q = Array2D::<DataType, M, N>::uninit();
 
     unsafe {
         init_array(m, n, &mut A, &mut R, &mut Q);
@@ -73,5 +73,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<10, 12>();
 }

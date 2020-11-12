@@ -1,9 +1,9 @@
-use crate::config::datamining::correlation::{DataType, M, N};
+use crate::config::datamining::correlation::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: &mut DataType,
@@ -17,7 +17,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_correlation(
+unsafe fn kernel_correlation<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: DataType,
@@ -66,15 +66,15 @@ unsafe fn kernel_correlation(
     corr[n - 1][n - 1] = 1.0;
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const M: usize, const N: usize>() -> Duration {
     let m = M;
     let n = N;
 
     let mut float_n = 0.0;
-    let mut data = Array2D::uninit();
-    let mut corr = Array2D::uninit();
-    let mut mean = Array1D::uninit();
-    let mut stddev = Array1D::uninit();
+    let mut data = Array2D::<DataType, M, N>::uninit();
+    let mut corr = Array2D::<DataType, N, N>::uninit();
+    let mut mean = Array1D::<DataType, N>::uninit();
+    let mut stddev = Array1D::<DataType, N>::uninit();
 
     unsafe {
         init_array(m, n, &mut float_n, &mut data);
@@ -88,5 +88,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<12, 14>();
 }

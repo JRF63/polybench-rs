@@ -1,11 +1,17 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::kernels::_3mm::{DataType, NI, NJ, NK, NL, NM};
+use crate::config::linear_algebra::kernels::_3mm::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<
+    const NI: usize,
+    const NJ: usize,
+    const NK: usize,
+    const NL: usize,
+    const NM: usize,
+>(
     ni: usize,
     nj: usize,
     nk: usize,
@@ -38,7 +44,13 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_3mm(
+unsafe fn kernel_3mm<
+    const NI: usize,
+    const NJ: usize,
+    const NK: usize,
+    const NL: usize,
+    const NM: usize,
+>(
     ni: usize,
     nj: usize,
     nk: usize,
@@ -78,20 +90,26 @@ unsafe fn kernel_3mm(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<
+    const NI: usize,
+    const NJ: usize,
+    const NK: usize,
+    const NL: usize,
+    const NM: usize,
+>() -> Duration {
     let ni = NI;
     let nj = NJ;
     let nk = NK;
     let nl = NL;
     let nm = NM;
 
-    let mut E = Array2D::uninit();
-    let mut A = Array2D::uninit();
-    let mut B = Array2D::uninit();
-    let mut F = Array2D::uninit();
-    let mut C = Array2D::uninit();
-    let mut D = Array2D::uninit();
-    let mut G = Array2D::uninit();
+    let mut E = Array2D::<DataType, NI, NJ>::uninit();
+    let mut A = Array2D::<DataType, NI, NK>::uninit();
+    let mut B = Array2D::<DataType, NK, NJ>::uninit();
+    let mut F = Array2D::<DataType, NJ, NL>::uninit();
+    let mut C = Array2D::<DataType, NJ, NM>::uninit();
+    let mut D = Array2D::<DataType, NM, NL>::uninit();
+    let mut G = Array2D::<DataType, NI, NL>::uninit();
 
     unsafe {
         init_array(ni, nj, nk, nl, nm, &mut A, &mut B, &mut C, &mut D);
@@ -105,5 +123,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<8, 9, 10, 11, 12>();
 }

@@ -1,11 +1,14 @@
 #![allow(non_snake_case)]
 
-use crate::config::stencils::adi::{DataType, N, TSTEPS};
+use crate::config::stencils::adi::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(n: usize, u: &mut Array2D<DataType, N, N>) {
+unsafe fn init_array<const N: usize, const TSTEPS: usize>(
+    n: usize,
+    u: &mut Array2D<DataType, N, N>,
+) {
     for i in 0..n {
         for j in 0..n {
             u[i][j] = (i + n - j) as DataType / n as DataType;
@@ -13,7 +16,7 @@ unsafe fn init_array(n: usize, u: &mut Array2D<DataType, N, N>) {
     }
 }
 
-unsafe fn kernel_adi(
+unsafe fn kernel_adi<const N: usize, const TSTEPS: usize>(
     tsteps: usize,
     n: usize,
     u: &mut Array2D<DataType, N, N>,
@@ -74,18 +77,20 @@ unsafe fn kernel_adi(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize, const TSTEPS: usize>() -> Duration {
     let n = N;
     let tsteps = TSTEPS;
 
-    let mut u = Array2D::uninit();
-    let mut v = Array2D::uninit();
-    let mut p = Array2D::uninit();
-    let mut q = Array2D::uninit();
+    let mut u = Array2D::<DataType, N, N>::uninit();
+    let mut v = Array2D::<DataType, N, N>::uninit();
+    let mut p = Array2D::<DataType, N, N>::uninit();
+    let mut q = Array2D::<DataType, N, N>::uninit();
 
     unsafe {
-        init_array(n, &mut u);
-        let elapsed = util::time_function(|| kernel_adi(tsteps, n, &mut u, &mut v, &mut p, &mut q));
+        init_array::<N, TSTEPS>(n, &mut u);
+        let elapsed = util::time_function(|| {
+            kernel_adi::<N, TSTEPS>(tsteps, n, &mut u, &mut v, &mut p, &mut q)
+        });
         util::consume(u);
         elapsed
     }
@@ -93,5 +98,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<10, 5>();
 }

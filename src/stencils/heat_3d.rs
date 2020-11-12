@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::stencils::heat_3d::{DataType, N, TSTEPS};
+use crate::config::stencils::heat_3d::DataType;
 use crate::ndarray::{Array3D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const N: usize, const TSTEPS: usize>(
     n: usize,
     A: &mut Array3D<DataType, N, N, N>,
     B: &mut Array3D<DataType, N, N, N>,
@@ -20,7 +20,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_heat_3d(
+unsafe fn kernel_heat_3d<const N: usize, const TSTEPS: usize>(
     tsteps: usize,
     n: usize,
     A: &mut Array3D<DataType, N, N, N>,
@@ -50,16 +50,17 @@ unsafe fn kernel_heat_3d(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize, const TSTEPS: usize>() -> Duration {
     let n = N;
     let tsteps = TSTEPS;
 
-    let mut A = Array3D::uninit();
-    let mut B = Array3D::uninit();
+    let mut A = Array3D::<DataType, N, N, N>::uninit();
+    let mut B = Array3D::<DataType, N, N, N>::uninit();
 
     unsafe {
-        init_array(n, &mut A, &mut B);
-        let elapsed = util::time_function(|| kernel_heat_3d(tsteps, n, &mut A, &mut B));
+        init_array::<N, TSTEPS>(n, &mut A, &mut B);
+        let elapsed =
+            util::time_function(|| kernel_heat_3d::<N, TSTEPS>(tsteps, n, &mut A, &mut B));
         util::consume(A);
         elapsed
     }
@@ -67,5 +68,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<12, 5>();
 }

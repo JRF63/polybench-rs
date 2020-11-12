@@ -1,5 +1,15 @@
+#![feature(min_const_generics)]
+
 use polybench_rs::linear_algebra::solvers::cholesky::bench;
 
+fn bench_and_print<const N: usize>() {
+    let dims = format!("{:?}", (N));
+    let elapsed = bench::<N>().as_secs_f64();
+    println!("{:<14} | {:<30} | {:.7} s", "cholesky", dims, elapsed);
+}
+
 fn main() {
-    println!("{:<14}: {:>15}", "cholesky", bench().as_nanos());
+    bench_and_print::<500>();
+    bench_and_print::<1000>();
+    bench_and_print::<2000>();
 }

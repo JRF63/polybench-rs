@@ -1,9 +1,9 @@
-use crate::config::medley::floyd_warshall::{DataType, N};
+use crate::config::medley::floyd_warshall::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(n: usize, path: &mut Array2D<DataType, N, N>) {
+unsafe fn init_array<const N: usize>(n: usize, path: &mut Array2D<DataType, N, N>) {
     for i in 0..n {
         for j in 0..n {
             path[i][j] = (i * j % 7 + 1) as DataType;
@@ -14,7 +14,7 @@ unsafe fn init_array(n: usize, path: &mut Array2D<DataType, N, N>) {
     }
 }
 
-unsafe fn kernel_floyd_warshall(n: usize, path: &mut Array2D<DataType, N, N>) {
+unsafe fn kernel_floyd_warshall<const N: usize>(n: usize, path: &mut Array2D<DataType, N, N>) {
     for k in 0..n {
         for i in 0..n {
             for j in 0..n {
@@ -28,10 +28,10 @@ unsafe fn kernel_floyd_warshall(n: usize, path: &mut Array2D<DataType, N, N>) {
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize>() -> Duration {
     let n = N;
 
-    let mut path = Array2D::uninit();
+    let mut path = Array2D::<DataType, N, N>::uninit();
 
     unsafe {
         init_array(n, &mut path);
@@ -43,5 +43,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<28>();
 }

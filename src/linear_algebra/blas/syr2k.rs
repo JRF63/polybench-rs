@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::config::linear_algebra::blas::syr2k::{DataType, M, N};
+use crate::config::linear_algebra::blas::syr2k::DataType;
 use crate::ndarray::{Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
-unsafe fn init_array(
+unsafe fn init_array<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     alpha: &mut DataType,
@@ -30,7 +30,7 @@ unsafe fn init_array(
     }
 }
 
-unsafe fn kernel_syr2k(
+unsafe fn kernel_syr2k<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     alpha: DataType,
@@ -51,15 +51,15 @@ unsafe fn kernel_syr2k(
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const M: usize, const N: usize>() -> Duration {
     let m = M;
     let n = N;
 
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut C = Array2D::uninit();
-    let mut A = Array2D::uninit();
-    let mut B = Array2D::uninit();
+    let mut C = Array2D::<DataType, M, M>::uninit();
+    let mut A = Array2D::<DataType, M, N>::uninit();
+    let mut B = Array2D::<DataType, M, N>::uninit();
 
     unsafe {
         init_array(m, n, &mut alpha, &mut beta, &mut C, &mut A, &mut B);
@@ -71,5 +71,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<10, 12>();
 }

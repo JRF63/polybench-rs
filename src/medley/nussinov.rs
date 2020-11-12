@@ -1,11 +1,15 @@
-use crate::config::medley::nussinov::{DataType, N};
+use crate::config::medley::nussinov::DataType;
 use crate::ndarray::{Array1D, Array2D, ArrayAlloc};
 use crate::util;
 use std::time::Duration;
 
 type Base = i8;
 
-unsafe fn init_array(n: usize, seq: &mut Array1D<Base, N>, table: &mut Array2D<DataType, N, N>) {
+unsafe fn init_array<const N: usize>(
+    n: usize,
+    seq: &mut Array1D<Base, N>,
+    table: &mut Array2D<DataType, N, N>,
+) {
     for i in 0..n {
         seq[i] = ((i + 1) % 4) as Base;
     }
@@ -17,7 +21,11 @@ unsafe fn init_array(n: usize, seq: &mut Array1D<Base, N>, table: &mut Array2D<D
     }
 }
 
-unsafe fn kernel_nussinov(n: usize, seq: &Array1D<Base, N>, table: &mut Array2D<DataType, N, N>) {
+unsafe fn kernel_nussinov<const N: usize>(
+    n: usize,
+    seq: &Array1D<Base, N>,
+    table: &mut Array2D<DataType, N, N>,
+) {
     let match_base = |b1, b2| {
         if b1 + b2 == 3 {
             1
@@ -64,11 +72,11 @@ unsafe fn kernel_nussinov(n: usize, seq: &Array1D<Base, N>, table: &mut Array2D<
     }
 }
 
-pub fn bench() -> Duration {
+pub fn bench<const N: usize>() -> Duration {
     let n = N;
 
     let mut seq = Array1D::uninit();
-    let mut table = Array2D::uninit();
+    let mut table = Array2D::<DataType, N, N>::uninit();
 
     unsafe {
         init_array(n, &mut seq, &mut table);
@@ -80,5 +88,5 @@ pub fn bench() -> Duration {
 
 #[test]
 fn check() {
-    bench();
+    bench::<25>();
 }
