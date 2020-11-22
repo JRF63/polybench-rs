@@ -32,4 +32,9 @@ Benchmarks that show no significant (less than 5%) change includes `symm`, `syr2
 
  `trisolv` does not show any clear trend.
 
- ![](.github/images/datadependent.png?raw=true)
+### Data size dependency
+
+![](.github/images/datadependent.png?raw=true)
+
+Repeated here are the benchmarks that showed sensitivity to the input size. The speedups on `correlation`,  `covariance`, `gemm`, `trmm`, `2mm`, `3mm`, `gramschmidt` and `mvt` increases with increasing input size indicative of better cache utilization compared to the baseline.
+`floyd_warshall` behaves more like a cutoff where below a certain size, Polly causes a regression and after that is parity with the default optimization.
