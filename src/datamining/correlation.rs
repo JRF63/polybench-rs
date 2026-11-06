@@ -7,12 +7,12 @@ unsafe fn init_array<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: &mut DataType,
-    data: &mut Array2D<DataType, M, N>,
+    data: &mut Array2D<DataType, N, M>,
 ) {
     *float_n = n as DataType;
-    for i in 0..m {
-        for j in 0..n {
-            data[i][j] = (i * j) as DataType / (N + i) as DataType;
+    for i in 0..n {
+        for j in 0..m {
+            data[i][j] = (i * j) as DataType / (M + i) as DataType;
         }
     }
 }
@@ -21,24 +21,24 @@ unsafe fn kernel_correlation<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: DataType,
-    data: &mut Array2D<DataType, M, N>,
-    corr: &mut Array2D<DataType, N, N>,
-    mean: &mut Array1D<DataType, N>,
-    stddev: &mut Array1D<DataType, N>,
+    data: &mut Array2D<DataType, N, M>,
+    corr: &mut Array2D<DataType, M, M>,
+    mean: &mut Array1D<DataType, M>,
+    stddev: &mut Array1D<DataType, M>,
 ) {
     let eps = 0.1;
 
-    for j in 0..n {
+    for j in 0..m {
         mean[j] = 0.0;
-        for i in 0..m {
+        for i in 0..n {
             mean[j] += data[i][j];
         }
         mean[j] /= float_n;
     }
 
-    for j in 0..n {
+    for j in 0..m {
         stddev[j] = 0.0;
-        for i in 0..m {
+        for i in 0..n {
             stddev[j] += (data[i][j] - mean[j]) * (data[i][j] - mean[j]);
             stddev[j] /= float_n;
             stddev[j] = stddev[j].sqrt();
@@ -46,35 +46,35 @@ unsafe fn kernel_correlation<const M: usize, const N: usize>(
         }
     }
 
-    for i in 0..m {
-        for j in 0..n {
+    for i in 0..n {
+        for j in 0..m {
             data[i][j] -= mean[j];
             data[i][j] /= float_n.sqrt() * stddev[j];
         }
     }
 
-    for i in 0..(n - 1) {
+    for i in 0..(m - 1) {
         corr[i][i] = 1.0;
-        for j in (i + 1)..n {
+        for j in (i + 1)..m {
             corr[i][j] = 0.0;
-            for k in 0..m {
+            for k in 0..n {
                 corr[i][j] += data[k][i] * data[k][j];
             }
             corr[j][i] = corr[i][j];
         }
     }
-    corr[n - 1][n - 1] = 1.0;
+    corr[m - 1][m - 1] = 1.0;
 }
 
 pub fn bench<const M: usize, const N: usize>() -> Duration {
-    let m = M;
     let n = N;
+    let m = M;
 
     let mut float_n = 0.0;
-    let mut data = Array2D::<DataType, M, N>::uninit();
-    let mut corr = Array2D::<DataType, N, N>::uninit();
-    let mut mean = Array1D::<DataType, N>::uninit();
-    let mut stddev = Array1D::<DataType, N>::uninit();
+    let mut data = Array2D::<DataType, N, M>::uninit();
+    let mut corr = Array2D::<DataType, M, M>::uninit();
+    let mut mean = Array1D::<DataType, M>::uninit();
+    let mut stddev = Array1D::<DataType, M>::uninit();
 
     unsafe {
         init_array(m, n, &mut float_n, &mut data);

@@ -7,12 +7,12 @@ unsafe fn init_array<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: &mut DataType,
-    data: &mut Array2D<DataType, M, N>,
+    data: &mut Array2D<DataType, N, M>,
 ) {
     *float_n = n as DataType;
-    for i in 0..m {
-        for j in 0..n {
-            data[i][j] = (i * j) as DataType / N as DataType;
+    for i in 0..n {
+        for j in 0..m {
+            data[i][j] = (i * j) as DataType / M as DataType;
         }
     }
 }
@@ -21,28 +21,28 @@ unsafe fn kernel_covariance<const M: usize, const N: usize>(
     m: usize,
     n: usize,
     float_n: DataType,
-    data: &mut Array2D<DataType, M, N>,
-    cov: &mut Array2D<DataType, N, N>,
-    mean: &mut Array1D<DataType, N>,
+    data: &mut Array2D<DataType, N, M>,
+    cov: &mut Array2D<DataType, M, M>,
+    mean: &mut Array1D<DataType, M>,
 ) {
-    for j in 0..n {
+    for j in 0..m {
         mean[j] = 0.0;
-        for i in 0..m {
+        for i in 0..n {
             mean[j] += data[i][j];
         }
         mean[j] /= float_n;
     }
 
-    for i in 0..m {
-        for j in 0..n {
+    for i in 0..n {
+        for j in 0..m {
             data[i][j] -= mean[j];
         }
     }
 
-    for i in 0..n {
-        for j in i..n {
+    for i in 0..m {
+        for j in i..m {
             cov[i][j] = 0.0;
-            for k in 0..m {
+            for k in 0..n {
                 cov[i][j] += data[k][i] * data[k][j];
             }
             cov[i][j] /= float_n - 1.0;
@@ -52,13 +52,13 @@ unsafe fn kernel_covariance<const M: usize, const N: usize>(
 }
 
 pub fn bench<const M: usize, const N: usize>() -> Duration {
-    let m = M;
     let n = N;
+    let m = M;
 
     let mut float_n = 0.0;
-    let mut data = Array2D::<DataType, M, N>::uninit();
-    let mut cov = Array2D::<DataType, N, N>::uninit();
-    let mut mean = Array1D::<DataType, N>::uninit();
+    let mut data = Array2D::<DataType, N, M>::uninit();
+    let mut cov = Array2D::<DataType, M, M>::uninit();
+    let mut mean = Array1D::<DataType, M>::uninit();
 
     unsafe {
         init_array(m, n, &mut float_n, &mut data);
