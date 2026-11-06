@@ -10,20 +10,20 @@ unsafe fn init_array<const M: usize, const N: usize>(
     n: usize,
     alpha: &mut DataType,
     beta: &mut DataType,
-    C: &mut Array2D<DataType, M, M>,
-    A: &mut Array2D<DataType, M, N>,
+    C: &mut Array2D<DataType, N, N>,
+    A: &mut Array2D<DataType, N, M>,
 ) {
     *alpha = 1.5;
     *beta = 1.2;
-    for i in 0..m {
-        for j in 0..n {
-            A[i][j] = ((i * j + 1) % m) as DataType / m as DataType;
+    for i in 0..n {
+        for j in 0..m {
+            A[i][j] = ((i * j + 1) % n) as DataType / n as DataType;
         }
     }
 
-    for i in 0..m {
-        for j in 0..m {
-            C[i][j] = ((i * j + 2) % n) as DataType / n as DataType;
+    for i in 0..n {
+        for j in 0..n {
+            C[i][j] = ((i * j + 2) % m) as DataType / m as DataType;
         }
     }
 }
@@ -33,14 +33,14 @@ unsafe fn kernel_syrk<const M: usize, const N: usize>(
     n: usize,
     alpha: DataType,
     beta: DataType,
-    C: &mut Array2D<DataType, M, M>,
-    A: &Array2D<DataType, M, N>,
+    C: &mut Array2D<DataType, N, N>,
+    A: &Array2D<DataType, N, M>,
 ) {
-    for i in 0..m {
+    for i in 0..n {
         for j in 0..=i {
             C[i][j] *= beta;
         }
-        for k in 0..n {
+        for k in 0..m {
             for j in 0..=i {
                 C[i][j] += alpha * A[i][k] * A[j][k];
             }
@@ -49,13 +49,13 @@ unsafe fn kernel_syrk<const M: usize, const N: usize>(
 }
 
 pub fn bench<const M: usize, const N: usize>() -> Duration {
-    let m = M;
     let n = N;
+    let m = M;
 
     let mut alpha = 0.0;
     let mut beta = 0.0;
-    let mut C = Array2D::<DataType, M, M>::uninit();
-    let mut A = Array2D::<DataType, M, N>::uninit();
+    let mut C = Array2D::<DataType, N, N>::uninit();
+    let mut A = Array2D::<DataType, N, M>::uninit();
 
     unsafe {
         init_array(m, n, &mut alpha, &mut beta, &mut C, &mut A);

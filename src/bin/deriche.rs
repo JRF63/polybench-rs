@@ -2,8 +2,8 @@
 
 use polybench_rs::medley::deriche::bench;
 
-fn bench_and_print<const H: usize, const W: usize>() {
-    let dims = format!("{:?}", (H, W));
+fn bench_and_print<const W: usize, const H: usize>() {
+    let dims = format!("{:?}", (W, H));
     let elapsed = bench::<H, W>().as_secs_f64();
     println!("{:<14} | {:<30} | {:.7} s", "deriche", dims, elapsed);
 }
