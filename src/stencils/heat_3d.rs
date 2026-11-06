@@ -26,7 +26,7 @@ unsafe fn kernel_heat_3d<const N: usize, const TSTEPS: usize>(
     A: &mut Array3D<DataType, N, N, N>,
     B: &mut Array3D<DataType, N, N, N>,
 ) {
-    for _ in 1..tsteps {
+    for _ in 1..=tsteps {
         for i in 1..(n - 1) {
             for j in 1..(n - 1) {
                 for k in 1..(n - 1) {
